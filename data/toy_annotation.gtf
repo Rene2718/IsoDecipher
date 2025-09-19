@@ -1,0 +1,11 @@
+chr1	source	gene	1000	5000	.	+	.	gene_id "GeneA"; gene_name "GeneA";
+chr1	source	transcript	1000	3000	.	+	.	gene_id "GeneA"; transcript_id "GeneA-201"; transcript_name "GeneA-201";
+chr1	source	CDS	1200	2500	.	+	0	gene_id "GeneA"; transcript_id "GeneA-201";
+chr1	source	transcript	1000	3200	.	+	.	gene_id "GeneA"; transcript_id "GeneA-202"; transcript_name "GeneA-202";
+chr1	source	CDS	1200	2500	.	+	0	gene_id "GeneA"; transcript_id "GeneA-202";
+
+chr2	source	gene	2000	6000	.	-	.	gene_id "GeneB"; gene_name "GeneB";
+chr2	source	transcript	2200	5000	.	-	.	gene_id "GeneB"; transcript_id "GeneB-201"; transcript_name "GeneB-201";
+chr2	source	CDS	3000	4800	.	-	0	gene_id "GeneB"; transcript_id "GeneB-201";
+chr2	source	transcript	2100	5500	.	-	.	gene_id "GeneB"; transcript_id "GeneB-202"; transcript_name "GeneB-202";
+chr2	source	CDS	3100	4900	.	-	0	gene_id "GeneB"; transcript_id "GeneB-202";
