@@ -29,16 +29,53 @@ def build_isoform_panel(gtf, gene_list_file, out_csv):
         gene_list=[line.strip() for line in f if line.strip()]
 
     #load GTF into gffutils database
-    df = gffutils.create_db(gtf,dbfn=":memory:", force=True. keep_order=True, merge_strategy="merge")
-    
-    result = []
+    db = gffutils.create_db(gtf, dbfn=":memory:", force=True, keep_order=True, merge_strategy="merge")
+
+    results = []
 
     for gene in gene_list:
         try:
             #loop through transcripts of this gene
             for tx in db.children(gene, featuretype='transcript'):
-                tx_id = tx.attribute.get("transcript_id",[""])[0]
-                tc_name = tx.attribute.get("transcript_name",[""])[0]
+                tx_id = tx.attributes.get("transcript_id",[""])[0]
+                tx_name = tx.attributes.get("transcript_name",[""])[0]
 
                 #get coding end -> calculat 3'UTR length
+                cds=list(db.children(tx, featuretype='CDS'))
+                if cds:
+                    if tx.strand =="+":
+                        cds_end = max(c.end for c in cds)
+                        utr_length = tx.end -cds_end
+                    else:
+                        cds_start = min(c.start for c in cds)
+                        utr_length = cds_start - tx.start
+                else:
+                    utr_length = "NA"
+                results.append({
+                    "gene": gene,
+                    "transcript_id": tx_id,
+                    "transcript_name": tx_name,
+                    "utr_length":utr_length,
+                    "isoform_type":"APA/ALE candidate",
+                    "detectability": "3' scRNA-seq (likely)"
+
+                })
+        except Exception as e:
+            print(f"Warning: gene {gene} not found in GTF({e})")
+    #save results 
+    df = pd.DataFrame(results)
+    df.to_csv(out_csv, index=False)
+    print(f"[IsoDecipher] Wrote panel to {out_csv}")
+    return df
+    
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="Build isoform panel from GTF")
+    parser.add_argument("--gtf", required=True, help="GENCODE/Ensembl GTF file")
+    parser.add_argument("--genes", required=True, help="Gene list (txt)")
+    parser.add_argument("--out", required=True, help="Output CSV panel")
+    args = parser.parse_args()
+
+    build_isoform_panel(args.gtf, args.genes, args.out)  
+
         
