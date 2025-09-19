@@ -43,7 +43,7 @@ IsoDecipher/
 
 ## 🔧 Installation
 ```bash
-git clone https://github.com/<your-username>/IsoDecipher.git
+git clone https://github.com/rene2718/IsoDecipher.git
 cd IsoDecipher
 
 conda create -n isodecipher python=3.10
