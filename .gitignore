@@ -4,3 +4,4 @@ data/*.csv
 # Ignore Python junk
 __pycache__/
 *.pyc
+data/*.gtf
