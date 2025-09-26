@@ -29,7 +29,7 @@ def build_isoform_panel(gtf, gene_list_file, out_csv):
         gene_list=[line.strip() for line in f if line.strip()]
 
     #load GTF into gffutils database
-    db = gffutils.create_db(gtf, dbfn=":memory:", force=True, keep_order=True, merge_strategy="merge")
+    db = gffutils.create_db(gtf, dbfn=":memory:", force=True, keep_order=True, merge_strategy="merge",disable_infer_genes=True,disable_infer_transcripts=True)
 
     results = []
 
