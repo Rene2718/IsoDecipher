@@ -5,3 +5,11 @@ data/*.csv
 __pycache__/
 *.pyc
 data/*.gtf
+
+# Ignore Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore large intermediate BAMs/FASTQs
+data/*.bam
+data/*.fastq
+data/*.fq
