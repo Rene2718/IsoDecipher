@@ -1,3 +1,4 @@
+# Immunoglobulins (Membrane/Secreted isoforms)
 IGHM
 IGHG1
 IGHG2
@@ -6,3 +7,127 @@ IGHG4
 IGHA1
 IGHA2
 IGHE
+
+# BCR signaling
+CD79A
+CD79B
+CD19
+CD22
+MS4A1
+
+# Cytokine & Receptor 
+IL2RA
+IL6R
+IL7R
+TNFRSF1A
+TNFRSF1B
+TGFBR1
+TGFBR2
+TNFSF10
+TNFSF13
+TNFSF13B
+FASLG
+ICOSLG
+CD274
+
+# Cell surface marker with isoform switching
+CD44
+CD47
+CD55
+CD59
+CD276
+
+# Adhesion Molecules - ICAM family
+ICAM1
+ICAM2
+ICAM3
+ICAM4
+ICAM5
+
+# Adhesion Molecules - Selectin family
+SELE
+SELP
+SELPLG
+
+# Adhesion Molecules - Integrin Alpha family
+ITGA1
+ITGA2
+ITGA3
+ITGA4
+ITGA5
+ITGA6
+ITGA7
+ITGA8
+ITGA9
+ITGA10
+ITGA11
+ITGAD
+ITGAE
+ITGAL
+ITGAM
+ITGAV
+ITGAX
+
+# Adhesion Molecules - Integrin Beta family
+ITGB1
+ITGB2
+ITGB3
+ITGB4
+ITGB5
+ITGB6
+ITGB7
+ITGB8
+
+# Adhesion Molecules - Other
+VCAM1
+PECAM1
+CDH1
+CDH5
+
+# Cancer-Related Genes with APA/ALE variants
+VEGFA
+MYC
+BCL2
+TP53
+KRAS
+EGFR
+MET
+FGFR2
+
+# Immune Checkpoints with Isoform Variations
+PDCD1
+CTLA4
+LAG3
+TIGIT
+HAVCR2
+
+
+# Complex Splice Variant Genes
+MUC1
+MUC4
+FN1
+VIM
+
+
+# S100 calcium-binding protein family
+S100A1
+S100A2
+S100A3
+S100A4
+S100A5
+S100A6
+S100A7
+S100A7A
+S100A8
+S100A9
+S100A10
+S100A11
+S100A12
+S100A13
+S100A14
+S100A15
+S100A16
+S100B
+S100G
+S100P
+S100Z

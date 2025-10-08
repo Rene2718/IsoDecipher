@@ -1,104 +1,71 @@
 # IsoDecipher 🧬
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Python 3.10](https://img.shields.io/badge/python-3.10-blue)]()
-[![Build with Cell Ranger / STARsolo](https://img.shields.io/badge/build-CellRanger%2FSTARsolo-orange)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)  
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue)]()  
+[![Compatible with Cell Ranger](https://img.shields.io/badge/compatible-CellRanger%20BAMs-green)]()
 
-**IsoDecipher: Revealing immune and cancer cell states through membrane vs secreted isoform usage and 3′UTR dynamics in 3′ scRNA-seq.**
-
----
-
-## 🚀 Overview
-Most single-cell RNA-seq pipelines (Cell Ranger, STARsolo) collapse all isoforms into a single *gene count*, discarding transcript-level information.  
-**IsoDecipher** is a lightweight framework that works *on top of existing Cell Ranger outputs* to reconstruct isoform usage patterns by leveraging:
-
-- **Alternative last exons (ALEs)**  
-- **Alternative polyadenylation (APA)**  
-- **Membrane vs secreted isoforms** of immune and cancer-related genes  
-
-This enables per-cell isoform biology without re-aligning FASTQs.
+**IsoDecipher: Targeted isoform quantification for immune and cancer biology from 3′ scRNA-seq data.**
 
 ---
 
-## 🔹 Why two “panel builders”?
-IsoDecipher separates **annotation** from **quantification** so you can choose the right tool for your analysis:
+## 🎯 Overview
 
-| Script | Purpose | Output | Why it matters |
-|--------|---------|--------|----------------|
-| `build_panel.py` | Annotation of transcripts | Table of isoforms, transcript IDs, **UTR lengths** | Human-readable reference — lets you inspect which isoforms exist, how long their 3′UTRs are, and which are biologically interesting. Useful for figures and reports. |
-| `build_panel_features.py` | Features for isoform assignment | Collapsed **polyA groups** (`GENE_polyA1`, `GENE_polyA2`) with last exon + polyA windows | Machine-readable features — tells IsoDecipher how to assign UMIs to isoform groups when parsing BAM files. Scales from simple genes (IGHM: secreted vs membrane) to complex ones (CD44, S100 with dozens of isoforms). |
+Most single-cell RNA-seq pipelines (e.g. Cell Ranger, STARsolo) collapse all transcript isoforms into a single **gene count**,  discarding crucial isoform-specific information that reveals cell states and functions.
 
-**In short:**  
-- Use **`build_panel.py`** when you want to *understand the isoforms themselves*.  
-- Use **`build_panel_features.py`** when you want to *actually count isoforms per cell* from BAM.  
+**IsoDecipher** recovers this biological signal by leveraging 3′ scRNA-seq read patterns to distinguish:
 
----
+- **Alternative last exons (ALEs)** and **polyadenylation sites (PAS)**  
+- **Membrane vs secreted isoforms** in immunoglobulin genes  
+- **3′UTR length variation** in immune and cancer-related genes  
 
-
-## 🔹 Key Features
-- 🧾 **PolyA grouping**: collapse transcripts with the same (or nearby) polyA ends into interpretable groups (`GENE_polyA1`, `GENE_polyA2`).  
-- 🧬 **Isoform Quantification**: parse Cell Ranger BAMs (CB/UB tags) and assign UMIs to isoform groups.  
-- 📏 **3′UTR Metrics**: compute weighted average UTR length per cell, detect shortening/lengthening events.  
-- 📊 **Visualization Ready**: outputs simple matrices/CSV that integrate directly into Scanpy or Seurat.  
-- 🌍 **Genome-wide APA option**: extend panel to all genes, or integrate with DaPars2 / scDaPars2 for discovery.  
+💡 Key insight: 3′ scRNA-seq reads contain sufficient information to resolve major isoform classes when analyzed with biological context.what to look for.
 
 ---
 
-## 🔹 Important Notes
-- **Use Cell Ranger with the *standard* GTF** (Ensembl/GENCODE). Do **not** give Cell Ranger the custom isoform GTF.  
-- IsoDecipher re-mines the BAM (`possorted_genome_bam.bam`), which contains **all aligned reads with CB/UB tags**, even those not assigned to any gene in the standard matrix.  
-- The custom panels you build (`panel_features.csv`) are used only in the IsoDecipher quantifier, not in Cell Ranger.  
-- `gene_list.txt` can include comments starting with `#` — these lines will be 
+## 🛠️ Tools Suite
+
+
+### 1. `build_panel.py` → Annotation
+**Purpose:** Builds a **per-transcript annotation table**.
+
+**Output Features:**
+- Last exon start/end per transcript  
+- 3′UTR length relative to CDS  
+- Immunoglobulin short/long classification (`IGHM`, `IGHG1–4`, `IGHA1/2`, `IGHE`)  
+- Transcript summary per gene (#transcripts, average UTR length)  
+
+**Use Case:** Understanding isoform landscape before quantification.
+
+
+---
+### 2. `build_panel_features.py`
+**Purpose:** Collapses isoforms into **polyA groups** and emits features for BAM quantification.
+
+**Output Features:**
+- `polyA_group`: Merged transcript ends within tolerance window
+- `last_exon_group`: Last exon coordinates per transcript
+- UTR length stats per group (avg, min, max) per group 
+- Customizable polyA windows and tolerance, with per-gene overrides  
+- Optional filtering of uninformative genes (single-transcript or collapsed groups)  
+
+**Use Case:** Generating features for isoform-aware counting.
+
 
 ---
 
-## Diagram
-```
-FASTQ
-   │
-   ▼
-Cell Ranger count  (with standard GTF)
-   │
-   ├── Gene count matrix (standard)
-   │
-   └── possorted_genome_bam.bam
-            │
-            ▼
-      IsoDecipher
-        ├── build_panel.py         → UTR lengths (annotation)
-        ├── build_panel_features.py → polyA groups (short/long for IGH)
-        └── quantify_isoforms_from_bam.py
-               │
-               ▼
-        Isoform-aware counts + UTR usage
-```
-
-
-## 📂 Repository Structure
-```
-IsoDecipher/
-├── data/                             # Input/output reference files
-│   ├── gene_list.txt                 # Curated immune/cancer panel
-│   ├── Homo_sapiens.GRCh38.115.gtf   # Annotation (not stored in repo)
-│   └── example_counts.tsv            # Example counts
-│
-├── scripts/                          # Python utilities
-│   ├── build_panel.py                # Isoform + UTR annotation table
-│   ├── build_panel_features.py       # PolyA group + IGH short/long feature builder
-│   └── quantify_isoforms_from_bam.py # Assign UMIs to isoform groups
-│
-├── notebooks/                        # Example Jupyter workflows
-│   └── demo_analysis.ipynb
-│
-├── docs/                             # Documentation, diagrams
-├── README.md                         # You are here
-├── LICENSE
-└── requirements.txt
-```
+### 3. `quantify_isoforms_from_bam.py` → Counting
+**Purpose:** Assign reads/UMIs to isoform groups from Cell Ranger BAMs  
+**Output:**
+- Cell × Isoform UMI counts matrices
+- Per-cell isoform usage fractions
+- Quality control metrics by evidence tier
+**Use Case:** Quantifying isoform expression in single-cell data.
 
 ---
 
-## 🔧 Installation
+## 🚀 Quick Start
+
+### Installation
 ```bash
 git clone https://github.com/rene2718/IsoDecipher.git
 cd IsoDecipher
@@ -110,135 +77,259 @@ pip install -r requirements.txt
 ```
 
 ---
+### Step 1. Generate Transcript Annotation
 
-## 🧪 Usage
-
-### 1. Annotate isoforms and UTR lengths
 ```bash
-python scripts/build_panel.py \
-  --gtf Homo_sapiens.GRCh38.115.gtf \
+python scripts/build_panel.py \    
+  --gtf data/Homo_sapiens.GRCh38.115.gtf \
   --genes data/gene_list.txt \
-  --out data/isoform_panel.csv
+  --out results/isoform_panel.csv     
 ```
-Output: table of transcripts with UTR lengths and IDs (for inspection/plots).
+Outputs:
+- `results/isoform_panel.csv` 
+- `results/isoform_panel_summary.csv`
 
-### 2. Build isoform groups for quantification
+For immunoglobulin constant region genes, IsoDecipher **auto-labels short vs long (secreted vs membrane) isoforms**.
+
+---
+### Step 2. Build Quantification Features
+
+**Usage:**
+```bash
+python scripts/build_panel_features.py     --gtf data/Homo_sapiens.GRCh38.115.gtf     --genes data/gene_list.txt     --out results/panel_features.csv \ [--custom_params data/custom_params.tsv]     [--no-skip_singleton]     [--no-skip_collapsed]     [--strategy balanced]
+```
+
+This generates:
+- `results/panel_features.csv`
+- `results/panel_features_summary.csv`
+
+---
+### Step 3. Quantify Isoforms from BAM
+
+```bash
+python scripts/quantify_isoforms_from_bam.py  \
+  --bam /path/to/possorted_genome_bam.bam  \
+  --panel data/panel_features.csv  \
+  --out_prefix results/iso
+```
+
+Output:  
+- `results/isoform_cell_x_polyA_counts.csv` — UMI counts per isoform group per cell  
+- `results/isoform_cell_x_gene_isoform_fraction.csv` — per-cell isoform fractions  
+- `results/isoform_isoform_qc.tsv` — Quality control metrics
+
+---
+## ⚙️ Core Concepts
+
+### PolyA Grouping
+Transcripts with nearby polyA ends are collapsed into groups and relabel immunoglobulin isoform with features:  
+
+```
+IGHM-201 (membrane) → IGHM_long
+IGHM-202 (secreted) → IGHM_short
+CD44-201, CD44-202, CD44-203 → CD44_polyA1
+```
+### Immunoglobulin Handling
+Automatic labeling of constant region genes:
+
+- IGHM, IGHG1-4, IGHA1-2, IGHE
+
+- -201 transcripts → _short (secreted)
+
+- -202 transcripts → _long (membrane-bound)
+
+- Special handling for IGHG1-203 as short isoform
+
+### Analysis Strategies
+Control grouping sensitivity via `--strategy`:  
+
+- **precise** - Strict grouping (20–40bp tolerance)  
+- **balanced** - Default (40–60bp tolerance)  
+- **sensitive** - Permissive grouping (60–80bp tolerance)  
+
+### Evidence Tiers
+- **tier1**: Unique last exon (high confidence)  
+- **tier3**: PolyA window only (lower confidence)  
+
+## 🎛️ Advanced Configuration
+### Custom Gene Parameters
+
+Creat a TSV/CSV for gene-specific tuning:
+
+```tsv
+gene    polyA_window    end_tolerance
+CD44    300             80
+IGHM    200             20
+FN1     250             60
+```
+Use withL
 ```bash
 python scripts/build_panel_features.py \
-  --gtf Homo_sapiens.GRCh38.115.gtf \
-  --genes data/gene_list.txt \
-  --out data/panel_features.csv
+    --custom_params data/custom_params.tsv
 ```
-Output: feature table of polyA groups (`GENE_polyA1`, `GENE_polyA2`), with last-exon and polyA-window intervals.  
-For IGH constant region genes (`IGHM`, `IGHG1–4`, `IGHA1–2`, `IGHE`), IsoDecipher automatically labels groups as **`_short`** vs **`_long`**.
+### Filtering Options
+
+- `--skip_singleton` / `--no-skip_singleton`  
+  Skip or include single-transcript genes (default: skip).  
+
+- `--skip_collapsed` / `--no-skip_collapsed`  
+  Skip or include genes that collapse into one group (default: skip).  
+
+
+---
+## 📊 Quality Control 
+
+IsoDecipher provides comprehensive QC to assess panel design and groupin effectiveness.
+
+### Outputs
+- **`*_summary.csv`** — summary per gene: number of transcripts, number of groups, and status (informative, collapsed, singleton, skipped).  
+- **QC plots** (optional):  
+  - Histogram of transcript cluster sizes (number of isoforms per group).  
+  - Scatterplot of **#transcripts vs #polyA groups**, highlighting “super-shrunk” genes (e.g. CD44, ITGB1, TP53).  
+
+### Interpretation
+- **Diagonal trend**: Genes with ~1 group per transcript (not collapsed).  
+- **Below diagonal**: Effective grouping (multiple isoforms → few groups)
+- **Super-shrunk genes**: Many isoforms → few groups (highlighted in red).  
+
+Below is an example QC visualization showing the relationship between the number of transcripts and the number of polyA groups per gene.  
+Genes that are “super-shrunk” (many isoforms collapsed into few groups) are highlighted in red.
+
+![IsoDecipher QC Plot](docs/example_qc_plot.png)
 
 ---
 
-### 🔹 Demo gene list
-To quickly test IsoDecipher with IGH short/long labeling, you can start with a minimal gene list:
 
-```text
-# Demo gene list for IsoDecipher
-# Includes IGH genes (short/long labeling) and a control gene (CD44)
-IGHM
-IGHG1
-CD44
-```
+## 📊 Biological Applications
 
-Save this as `demo_gene_list.txt` and run:
+### Immunology
+- B cell maturation — Membrane to secreted immunoglobulin switching
 
-```bash
-python scripts/build_panel_features.py   --gtf Homo_sapiens.GRCh38.115.gtf   --genes demo_gene_list.txt   --out demo_panel_features.csv
-```
+- Plasma cell identification — Dominant secreted isoform expression
 
-**Expected output:**  
-- IGHM is split into `IGHM_short` and `IGHM_long`.  
-- IGHG1 is split into `IGHG1_short` and `IGHG1_long` (with the `IGHG1-203` exception labeled `short`).  
-- CD44 remains labeled as `CD44_polyA1`, `CD44_polyA2`, etc.
+- T cell activation — Soluble vs. membrane receptor isoforms (IL2RA, IL7R, TNFRSF1A)
 
----
+- Exhaustion markers — PDCD1, LAG3, TIGIT isoform usage
 
-### 3. Quantify isoform usage from Cell Ranger BAM
-```bash
-python scripts/quantify_isoforms_from_bam.py \
-  --bam cellranger/outs/possorted_genome_bam.bam \
-  --panel data/panel_features.csv \
-  --genes data/gene_list.txt \
-  --out_prefix results/igh
-```
----
 
-## 📊 Outputs
 
-| File | Description |
-|------|-------------|
-| `*_cell_x_polyA_counts.csv` | UMI counts per isoform group per cell |
-| `*_cell_x_gene_isoform_fraction.csv` | Isoform fractions per gene per cell |
-| `*_isoform_qc.tsv` | QC: UMIs assigned by tier (unique last exon vs polyA window vs ambiguous) |
+### Cancer Biology
+- 3′UTR shortening — CD44, VEGFA, MYC in proliferating cells
+
+- Metastasis markers — FN1, VIM, MUC1 isoform switching
+
+- Cell adhesion — CD44 variant expression in tumor microenvironments
+
+- S100 family — Calcium-binding protein isoform dynamics
 
 ---
 
-## 📊 Example Outputs
+## 📈 Output Interpretation
 
-**`build_panel.py` (annotation table)**  
+**Isoform-aware counts:**  
+
 ```
-gene,transcript_id,transcript_name,utr_length
-IGHM,ENST00000390655,IGHM-201,1127
-IGHM,ENST00000610629,IGHM-202,310
+cell_id         IGHM_short   IGHM_long   CD44_polyA1
+AAACCTACAATGCC       5          12          3
+AAACCTGAGCGATG       8           2          7
 ```
 
-**`build_panel_features.py` (polyA groups for quantification)**  
-```
-gene,polyA_group,feature_type,feature_id,chrom,start,end,strand,transcripts,transcript_names,avg_utr_length,min_utr_length,max_utr_length,evidence_tier
-IGHM,IGHM_short,polyA_window,IGHM_short_window,chr14,105122000,105122600,+,ENST00000390655;ENST00000610629,IGHM-201;IGHM-202,620,310,930,tier3_polyA
-IGHM,IGHM_short,last_exon_group,IGHM_short_exon_ENST00000390655,chr14,105121800,105122000,+,ENST00000390655,IGHM-201,620,310,930,tier1_group
-```
+**QC metrics:**  
+- Proportion of UMIs assigned by last exon vs polyA window  
+- Gene-level isoform fractions per cell  
+- Gene coverage — Percentage of cells expressing isoform groups
 
 ---
 
-## 🔹 IsoDecipher vs. Genome-wide UTR Tools
+## 🔬 Best Practices
 
-| Tool | Scope | Input | Output | Strengths | Limitations |
-|------|-------|-------|--------|------------|-------------|
-| **IsoDecipher** (this repo) | *Panel-based* (immune/cancer gene list, e.g. IGHM, CD44) | Cell Ranger BAM + panel_features.csv | - `*_cell_x_polyA_counts.csv` → UMI counts per isoform group per cell<br>- `*_cell_x_gene_isoform_fraction.csv` → isoform usage fractions<br>- `*_isoform_qc.tsv` → QC by evidence tier<br>- Weighted **UTR length per cell** (from avg UTRs) | - Very interpretable (e.g. “IGHM_short vs IGHM_long”)<br>- Keeps CB/UB context<br>- Works directly on Cell Ranger BAMs you already have | Not genome-wide by default (limited to curated panel unless expanded) |
-| **scUTRquant** | *Genome-wide* | FASTQs or BAM + GTF | - Cell × isoform count matrix (similar to Cell Ranger output)<br>- Isoform fractions<br>- Integrates directly into Seurat/Scanpy | - Lightweight (kallisto|bustools pseudoalignment)<br>- Designed for scRNA-seq 3′ end capture<br>- Gives genome-wide isoform quantification | Requires rerun from FASTQ (not just BAM)<br>- Less flexible naming/grouping (IDs not curated like IsoDecipher) |
-| **scDaPars2** | *Genome-wide* | BAM + GTF | - **PDUI matrix**: Percentage Distal polyA site Usage Index per gene per cell/cluster<br>- Genome-wide APA calls | - Extends DaPars (well-known APA tool) to single-cell<br>- Produces PDUI which is standard APA metric | Heavier compute<br>- More statistical modeling, less direct UMI counting<br>- Output is PDUI (relative usage) rather than raw counts |
-| **scAPA / scAPAtrap** | *Genome-wide* | BAM | - Detected polyA sites<br>- Counts per polyA site per cell<br>- APA scores (per gene/cell) | - Call novel polyA sites directly from scRNA-seq<br>- Genome-wide | Often noisier polyA detection<br>- More complex workflows |
+### Workflow Recommandations
+- Start small with **IGH genes + CD44** to validate the workflow  
+- Use **positive controls** (e.g. Plasma cells majority IGHG-short)  
+- Check UMI counts and isoform fractions before scaling up  
+- Expand the panel iteratively (immune, cytokines, adhesion, cancer drivers)  
+- Validate biologically — Confirm expected cell-type-specific patterns
 
----
+### Parameter Tuning
+- Simple genes and immunoglobulins — Default parameters usually sufficient
 
-## 📊 Example Applications
-- **Plasma B cells**: IGHM/IGHG isoform switch (membrane → secreted) + UTR shortening.  
-- **T cells**: Soluble receptor isoforms (IL7R, TNFRSF1A) distinguish activation states.  
-- **Tumor subsets**: Global 3′UTR shortening in CD44, VEGFA, S100 family genes.  
-
-## 💻 System Requirements
-IsoDecipher is designed to be lightweight and run comfortably on a **local workstation or laptop**:
-
-- **OS**: Linux / macOS (Windows with WSL)  
-- **CPU**: 2–4 cores recommended  
-- **RAM**: 8–16 GB is sufficient for panels of 50–200 genes  
-- **Disk**: <5 GB for typical outputs (depends on BAM size)  
-
-Why so light?  
-- IsoDecipher does **not** re-align FASTQs.  
-- It works directly from the `possorted_genome_bam.bam` output of Cell Ranger.  
-- Only the **genes in your panel** are processed (instead of genome-wide).  
-
-Typical runtime on a laptop: **minutes to an hour** depending on panel size.  
-
-By contrast, genome-wide APA tools (DaPars2, scDaPars2, scUTRquant) may require HPC or cloud environments because they re-process all reads across the transcriptome.
+- Complex genes (CD44, MUC1) — May require custom tolerance settings
 
 ---
 
+## 📂 Repository Structure
+```
+IsoDecipher/
+├──results/
+|   ├── isoform_panel.csv
+|   ├── isoform_panel_summary.csv
+|   ├── panel_features.csv
+|   └── panel_features_summary.csv
+├── data/
+│   ├── gene_list.txt
+│   ├── Homo_sapiens.GRCh38.115.gtf
+│   └── Homo_sapiens.GRCh38.115.gtf.db
+├── scripts/
+│   ├── build_panel.py
+│   ├── build_panel_features.py
+│   └── quantify_isoforms_from_bam.py
+├── notebooks/
+│   └── demo_analysis.ipynb
+├── docs/
+├── README.md
+├── LICENSE
+└── requirements.txt
+```
+
+---
+## ❓ Frequently Asked Questions
+### Why target specific genes instead of genome-wide?
+Targeted approach provides:
+- Higher sensitivity for biologically relevant genes
+
+- Interpretable results with clear biological context
+
+- Computational efficiency for focused research questions
+
+- Reduced multiple testing burden in downstream analysis
+
+
+### How does IsoDecipher handle technical variability?
+- Adjustable tolerance parameters per gene
+
+- Multiple evidence tiers for confidence scoring
+
+- Strategy-based grouping to balance sensitivity/specificity
+
+- Custom overrides: Fine-tuninf for specific genes
+
+### Can I use IsoDecipher with other scRNA-seq platforms?
+Yes! IsoDecipher works with any 3′ scRNA-seq data that produces BAM files with cell barcode (CB) and UMI (UB) tags.
+
+### Can I customize the gene panel?
+Absolutely! Provide your own gene list file with one gene symbol per line. Comments starting with # are ignored.
+
+
+### What are the system requirements?
+- RAM: 8-16 GB for typical gene panels
+
+- Storage: <5 GB for outputs
+
+- Python: 3.10 or higher
+
+- Dependencies: gffutils, pandas, pysam
+
+
+---
 ## 🗺️ Roadmap
-- [ ] Refine last-exon uniqueness (clip overlaps).  
-- [ ] Expand gene panels beyond B cells (CD44, IL7R, VEGFA).  
-- [ ] Genome-wide APA discovery integration (DaPars2, scDaPars2).  
-- [ ] Build visualization notebooks (UMAP, violin, heatmap).  
-- [ ] Release preprint + example dataset.  
+- [ ] Refine last-exon grouping heuristics  
+- [ ] Expand curated panels beyond immune/cancer genes  
+- [ ] Integration with genome-wide APA tools (DaPars2, scUTRquant)  
+- [ ] Build Scanpy-ready visualization notebooks  
+- [ ] Single-cell multiome compatibility
+- [ ] Release preprint and benchmark datasets  
 
 ---
 
-## 📜 License
+## 📄 License
 MIT License © 2025 Rene Yu-Hong Cheng
