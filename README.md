@@ -195,7 +195,7 @@ IsoDecipher provides comprehensive QC to assess panel design and groupin effecti
 Below is an example QC visualization showing the relationship between the number of transcripts and the number of polyA groups per gene.  
 Genes that are “super-shrunk” (many isoforms collapsed into few groups) are highlighted in red.
 
-![IsoDecipher QC Plot](docs/example_qc_plot.png)
+![IsoDecipher QC Plot](docs/example_qc.png)
 
 ---
 
