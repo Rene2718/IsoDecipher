@@ -1,4 +1,6 @@
-# IsoDecipher 🧬
+<img src="assets/isodecipher_logo.png" alt="IsoDecipher logo" width="220"/>
+
+# IsoDecipher 
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)  
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue)]()  
@@ -80,10 +82,10 @@ pip install -r requirements.txt
 ### Step 1. Generate Transcript Annotation
 
 ```bash
-python scripts/build_panel.py \    
-  --gtf data/Homo_sapiens.GRCh38.115.gtf \
-  --genes data/gene_list.txt \
-  --out results/isoform_panel.csv     
+python scripts/build_panel.py \
+    --gtf data/Homo_sapiens.GRCh38.115.gtf \
+    --genes data/gene_list.txt \
+    --out results/isoform_panel.csv    
 ```
 Outputs:
 - `results/isoform_panel.csv` 
@@ -96,7 +98,13 @@ For immunoglobulin constant region genes, IsoDecipher **auto-labels short vs lon
 
 **Usage:**
 ```bash
-python scripts/build_panel_features.py     --gtf data/Homo_sapiens.GRCh38.115.gtf     --genes data/gene_list.txt     --out results/panel_features.csv \ [--custom_params data/custom_params.tsv]     [--no-skip_singleton]     [--no-skip_collapsed]     [--strategy balanced]
+python IsoDecipher/build_panel_features.py \
+    --gtf Homo_sapiens.GRCh38.115.gtf \
+    --genes data/gene_list.txt \
+    --out result/panel_features.csv \
+    [--custom_params custom.tsv] \
+    [--no-skip_singleton] \
+    [--no-skip_collapsed]
 ```
 
 This generates:
@@ -107,7 +115,7 @@ This generates:
 ### Step 3. Quantify Isoforms from BAM
 
 ```bash
-python scripts/quantify_isoforms_from_bam.py  \
+python IsoDecipher/scripts/quantify_isoforms_from_bam.py  \
   --bam /path/to/possorted_genome_bam.bam  \
   --panel data/panel_features.csv  \
   --out_prefix results/iso
@@ -162,9 +170,9 @@ CD44    300             80
 IGHM    200             20
 FN1     250             60
 ```
-Use withL
+Use with
 ```bash
-python scripts/build_panel_features.py \
+python IsoDecipher/scripts/build_panel_features.py \
     --custom_params data/custom_params.tsv
 ```
 ### Filtering Options
@@ -261,19 +269,21 @@ AAACCTGAGCGATG       8           2          7
 ```
 IsoDecipher/
 ├──results/
-|   ├── isoform_panel.csv
-|   ├── isoform_panel_summary.csv
-|   ├── panel_features.csv
-|   └── panel_features_summary.csv
+│   ├── isoform_panel.csv
+│   ├── isoform_panel_summary.csv
+│   ├── panel_features.csv
+│   └── panel_features_summary.csv
 ├── data/
 │   ├── gene_list.txt
 │   ├── Homo_sapiens.GRCh38.115.gtf
 │   └── Homo_sapiens.GRCh38.115.gtf.db
-├── scripts/
-│   ├── build_panel.py
-│   ├── build_panel_features.py
-│   └── quantify_isoforms_from_bam.py
+├── IsoDecipher/
+|   └── scripts/
+│       ├── build_panel.py
+│       ├── build_panel_features.py
+│       └── quantify_isoforms_from_bam.py
 ├── notebooks/
+│   ├── iso_test.ipynb
 │   └── demo_analysis.ipynb
 ├── docs/
 ├── README.md
