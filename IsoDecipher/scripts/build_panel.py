@@ -12,7 +12,7 @@ Features:
  - concise summary (#transcripts per gene, ave UTR length)
 
 Usage:
-python build_panel.py \
+python IsoDecipher/sscripts/build_panel.py \
     --gtf data/Homo_sapiens.GRCh38.115.gtf \
     --genes data/gene_list.txt \
     --out results/isoform_panel.csv \
@@ -22,6 +22,8 @@ import gffutils
 import pandas as pd
 import argparse 
 import time
+import os 
+import numpy as np
 
 IG_WHITELIST = {"IGHM", "IGHG1", "IGHG2", "IGHG3",
                 "IGHG4", "IGHA1", "IGHA2", "IGHE"}
@@ -130,8 +132,15 @@ def build_panel(gtf, gene_list_file, out_csv, debug=False):
                 else:
                     cds_start = min(c.start for c in cds)
                     utr_len = cds_start - last_start
+                # safety: discard invalid/negative or 0-length UTRs
+                if utr_len is None or utr_len <= 0:
+                    utr_len = pd.NA
+                    utr_status = "invalid_or_negative"
+                else:
+                    utr_status = "valid"
             else:
                 utr_len = pd.NA
+                utr_status = "missing_CDS"
             
             rows.append({
                 "gene": gene,
@@ -141,26 +150,50 @@ def build_panel(gtf, gene_list_file, out_csv, debug=False):
                 "last_exon_start": last_start,
                 "last_exon_end": last_end,
                 "utr_length": utr_len,
+                "utr_status":utr_status,
                 "ig_label": get_ig_label(gene, tx_name)
             })
             if debug:
                 print(f"[DEBUG] {gene} {tx_name} ({tx_id}) "
                     f"strand={tx.strand} "
                     f"last_exon=({last_start}-{last_end}) "
-                    f"utr={utr_len}")
-
+                    f"utr={utr_len} status={utr_status}")
+    # --- Write per-transcript table ---
     df = pd.DataFrame(rows)
     df.to_csv(out_csv, index= False)
+    # --- Compute per-gene summary ---
+    def safe_stat(series, func):
+        return func(series.dropna()) if series.dropna().size >0 else np.nan
     
+
     
-    summary=df.groupby("gene").agg(
-        num_tx=("transcript_id","count"),
-        avg_utr=("utr_length","mean")
-    ).reset_index()
+    summary= (
+        df.groupby("gene")
+        .agg(
+            num_tx=("transcript_id","count"),
+            avg_utr=("utr_length", lambda x: safe_stat(x, np.mean)),
+            min_utr=("utr_length", lambda x: safe_stat(x, np.min)),
+            max_utr=("utr_length", lambda x: safe_stat(x, np.max)),
+            utr_range=("utr_length", lambda x: safe_stat(x, lambda v: np.max(v)-np.min(v))),
+            utr_std=('utr_length', lambda x: safe_stat(x, np.std)),
+        )
+        .reset_index()
+    )
+    summary = summary.round({
+        "avg_utr": 1,
+        "min_utr": 0,
+        "max_utr": 0,
+        "utr_range": 0,
+        "utr_std": 1
+    })
+
 
     summary_path = out_csv.replace(".csv", "_summary.csv")
     summary.to_csv(summary_path, index=False)
 
+    for _, row in summary.iterrows():
+        if pd.notna(row["utr_range"]) and row["utr_range"] > 1000:
+            print(f"⚠️  {row['gene']}: large UTR diversity ({row['utr_range']:.0f} bp range)") 
     print("\n[SUMMARY] Transcript stat per gene:")
     print(summary.to_string(index=False))
     print(f"[IsoDecipher] Annotation table written to {out_csv}")

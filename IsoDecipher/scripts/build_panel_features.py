@@ -13,7 +13,7 @@ Features:
  - min_utr_length: max_utr_length: spread of UTR lengths
 
 Usage:
-python build_panel_features.py \
+python IsoDecipher/scripts/build_panel_features.py \
     --gtf Homo_sapiens.GRCh38.115.gtf \
     --genes data/gene_list.txt \
     --out result/panel_features.csv \
@@ -24,13 +24,6 @@ python build_panel_features.py \
 By default, single-transcript genes and collapsed groups are skipped.
 Use --no-skip_singleton and/or --no-skip_collapsed to include them.
 
-Example:
-python build_panel_features.py \
-    --gtf data/Homo_sapiens.GRCh38.115.gtf \
-    --genes data/gene_list.txt \
-    --out results/panel_features.csv \
-    --strategy balanced \
-    --custom_params data/custom_params.tsv
 """
 
 import argparse
@@ -361,7 +354,11 @@ def build_panel_features(gtf, gene_list_file, out_csv, polyA_window=200, end_tol
             gene = row["gene"]
             if gene in IG_WHITELIST:
                 tx_names = row["transcript_names"].split(";")
-                labels = [get_ig_label(gene, t) for t in tx_names if get_ig_label(gene, t)]
+                labels = []
+                for tx_name in tx_names:
+                    label = get_ig_label(gene, tx_name)
+                    if label is not None:
+                        labels.append(label)
                 if labels:
                     if len(set(labels)) == 1:
                         label = labels[0]
