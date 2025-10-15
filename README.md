@@ -1,6 +1,8 @@
-<p>
-  <img src="assets/isodecipher_logo.png" alt="IsoDecipher logo" width="55" style="margin-bottom:-8px;"/>
-</p>
+<h1 style="display: flex; align-items: center; gap: 8px; margin-bottom: 0;">
+  <img src="assets/isodecipher_logo.png" alt="IsoDecipher logo" width="46">
+  <span>IsoDecipher</span>
+</h1>
+
 
 # IsoDecipher
 
