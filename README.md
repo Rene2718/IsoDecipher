@@ -1,4 +1,4 @@
-# <img src="assets/isodecipher_logo.png" alt="IsoDecipher logo" width="55" style="vertical-align: -20px; margin-right: 6px;"> IsoDecipher
+# <img src="assets/isodecipher_logo.png" alt="IsoDecipher logo" width="55" style="vertical-align: middle; position: relative; top: 6px; margin-right: 6px;"> IsoDecipher
 
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)  
