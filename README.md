@@ -1,8 +1,4 @@
-<h1 style="display: flex; align-items: center; gap: 8px; margin-bottom: 0;">
-  <img src="assets/isodecipher_logo.png" alt="IsoDecipher logo" width="50">
-  <span>IsoDecipher</span>
-</h1>
-
+<img src="assets/isodecipher_logo_text.png" alt="IsoDecipher logo" width="360"/>
 
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)  
