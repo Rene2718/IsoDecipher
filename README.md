@@ -1,4 +1,4 @@
-<img src="assets/isodecipher_logo_text.png" alt="IsoDecipher logo" width="360"/>
+<img src="assets/isodecipher_logo_text.png" alt="IsoDecipher logo" width="300"/>
 
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)  
