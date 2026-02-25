@@ -340,5 +340,13 @@ Absolutely! Provide your own gene list file with one gene symbol per line. Comme
 
 ---
 
+## 📚 Technical Documentation
+
+Detailed deep-dives into the engineering and biological logic of IsoDecipher:
+
+* [Resolving Group-Level Ambiguity](doc/resolving_group_ambiguity.md) - A case study on using set-based deduplication to handle overlapping transcript coordinates.
+
+---
+
 ## 📄 License
 MIT License © 2025 Rene Yu-Hong Cheng
