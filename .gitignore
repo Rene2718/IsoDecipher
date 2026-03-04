@@ -1,26 +1,31 @@
 # Ignore test outputs
-data/*.csv
+data/
+results/
+oldversion/
+*.bam
+*.bai
+*.fastq
+*.fq
+*.gz
+*.csv
+*.tsv
+*.gtf
+*.db
 
 # Ignore Python junk
 __pycache__/
-*.pyc
-data/*.gtf
-data/*.gtf.db
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
 
 # Ignore Jupyter notebook checkpoints
 .ipynb_checkpoints/
 
-# Ignore large intermediate BAMs/FASTQs
-data/*.bam
-data/*.fastq
-data/*.fq
-
 # macOS Finder files
 .DS_Store
-data/.DS_Store
-
-# Packaging
-*.egg-info/
-dist/
-build/
-__pycache__/
+.vscode/
+.idea/
