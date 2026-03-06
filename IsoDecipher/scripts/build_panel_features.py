@@ -17,9 +17,7 @@ python IsoDecipher/scripts/build_panel_features.py \
     --gtf data/Homo_sapiens.GRCh38.115.gtf \
     --genes data/gene_list.txt \
     --out results/panel_features.csv \
-    [--custom_params custom.tsv] \
-    [--no-skip_singleton] \
-    [--no-skip_collapsed]
+    [--custom_params custom.tsv] 
 
 By default, single-transcript genes and collapsed groups are skipped.
 Use --no-skip_singleton and/or --no-skip_collapsed to include them.
@@ -222,7 +220,7 @@ def main():
                      for line in f 
                      if line.strip() and not line.strip().startswith("#")]
     # Load custom gene tolerance
-    custom_params = load_custom_parameters(args.custom_params if hasattr(args, "custome_params") else None)
+    custom_params = load_custom_parameters(args.custom_params)
 
     print(f"[IsoDecipher] Collecting transcript ends for {len(gene_list)} genes...")
 
@@ -272,9 +270,9 @@ def main():
 
             }
             if gene_name.upper() in IG_WHITELIST:
-                row["ig_label"] = "Secreted" if i == 0 else "Membrane"
+                row["user_label"] = "Secreted" if i == 0 else "Membrane"
             else:
-                row["ig_label"] = "N/A"
+                row["user_label"] = "N/A"
 
             panel_rows.append(row)
 

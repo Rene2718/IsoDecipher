@@ -1,5 +1,6 @@
 # Ignore test outputs
 data/
+!data/gene_list.txt
 results/
 oldversion/
 *.bam
