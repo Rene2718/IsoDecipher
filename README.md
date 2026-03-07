@@ -1,5 +1,5 @@
 
-# IsoDecipher 🧬
+# IsoDecipher 
 
 **IsoDecipher** is a targeted isoform quantification tool designed for **3' single-cell RNA-seq (scRNA-seq)** data.
 
@@ -11,19 +11,19 @@ It recovers hidden biological signals—such as **Alternative Polyadenylation (A
 
 ---
 
-## Development Status
+### Development Status
 
 ⚠️ IsoDecipher is currently under active development.
 
 Current progress:
 
 - Panel builder ✔
-- Read assignment 🚧
-- Downstream VAE analysis ⏳
+- Read assignment ✔
+- Downstream analysis ⏳
 
 ---
 
-# Concept
+## Concept
 
 Standard scRNA-seq pipelines collapse transcript isoforms into **gene-level counts**.
 
@@ -79,9 +79,9 @@ at **single-cell resolution**.
 
 ---
 
-# 🔥 Why IsoDecipher?
+## Why IsoDecipher?
 
-## 1. Solving the Noise Problem: True Signal Extraction
+### 1. Solving the Noise Problem: True Signal Extraction
 
 ### The Problem
 
@@ -109,7 +109,7 @@ Reads are assigned to **GTF-derived polyA groups**, which:
 
 ---
 
-## 2. Zero-Ambiguity Indexing
+### 2. Zero-Ambiguity Indexing
 
 Most tools output **raw genomic coordinates**, which becomes confusing for **negative strand genes**.
 
@@ -141,7 +141,7 @@ This enables consistent calculation of the **Proximal Usage Index (PUI)**.
 
 ---
 
-## 3. Semantic Labeling
+### 3. Semantic Labeling
 
 Most APA tools output **abstract site IDs**.
 
@@ -149,7 +149,7 @@ IsoDecipher supports **user-defined semantic labels**.
 
 Example:
 
-| gene | group | label |
+| gene | group | user_label |
 |-----|------|------|
 | IGHM | 0 | Secreted |
 | IGHM | 1 | Membrane |
@@ -157,15 +157,15 @@ Example:
 Resulting features:
 
 ```
-IGHM_secreted
-IGHM_membrane
+IGHM_G0_secreted
+IGHM_G1_membrane
 ```
 
 The count matrix becomes **biologically interpretable immediately**.
 
 ---
 
-# Comparison
+## Comparison
 
 | Feature | De-novo Tools | IsoDecipher |
 |---|---|---|
@@ -177,7 +177,7 @@ Analysis readiness | Heavy cleaning | Scanpy ready |
 
 ---
 
-# 🎯 Key Features
+##  Key Features
 
 - Distance-based polyA clustering
 - Strand-aware site ordering
@@ -188,7 +188,7 @@ Analysis readiness | Heavy cleaning | Scanpy ready |
 
 ---
 
-# 🚀 Installation
+##  Installation
 
 Recommended environment manager: **Miniforge / Mamba**
 
@@ -201,9 +201,9 @@ pip install gffutils pysam pandas numpy scanpy anndata matplotlib seaborn scipy
 
 ---
 
-# ⚡ Quick Start
+##  Quick Start
 
-## Step 1: Build isoform feature panel
+### Step 1: Build isoform feature panel
 
 Convert a standard GTF annotation into a quantifiable isoform feature table.
 
@@ -219,7 +219,7 @@ panel_features.csv
 
 ---
 
-## Step 2: Read Assignment (In Development)
+### Step 2: Read Assignment (In Development)
 
 Reads from **Cell Ranger BAM files** will be assigned to the predefined `polyA_groups`.
 
@@ -239,7 +239,7 @@ cells × polyA_groups
 
 ---
 
-## Step 3: Downstream Analysis (Planned)
+### Step 3: Downstream Analysis (Planned)
 
 Isoform usage matrices can be directly used with:
 
@@ -250,7 +250,7 @@ Isoform usage matrices can be directly used with:
 
 ---
 
-# Workflow Overview
+## Workflow Overview
 
 ```
 GTF annotation + gene panel
@@ -280,7 +280,7 @@ Scanpy / VAE / ML analysis
 
 ---
 
-# 📊 Output Schema
+##  Output Schema
 
 `panel_features.csv`
 
@@ -294,9 +294,9 @@ Scanpy / VAE / ML analysis
 
 ---
 
-# 📚 Technical Notes
+##  Technical Notes
 
-## Strand-Aware Ordering
+### Strand-Aware Ordering
 
 IsoDecipher guarantees:
 
@@ -309,7 +309,7 @@ independent of genomic strand orientation.
 
 ---
 
-## Immunoglobulin Isoforms
+### Immunoglobulin Isoforms
 
 For curated immunoglobulin loci:
 
@@ -322,7 +322,7 @@ This enables detection of **antibody secretion switching** directly from 3' scRN
 
 ---
 
-# 📄 License
+##  License
 
 MIT License  
 © 2026 Rene Yu-Hong Cheng
