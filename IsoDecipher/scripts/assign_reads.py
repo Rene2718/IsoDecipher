@@ -1,8 +1,17 @@
 import pysam
 import pandas as pd
 from collections import defaultdict
+import argparse
+import os
 
-panel = pd.read_csv("results/panel_features.csv")
+# 1. Setup Argument Parsing
+parser = argparse.ArgumentParser(description="Assign reads to isoforms per sample")
+parser.add_argument("--bam", required=True, help="Path to input BAM file")
+parser.add_argument("--panel", default="results/panel_features.csv", help="Path to panel features CSV")
+parser.add_argument("--out", required=True, help="Path to save output CSV")
+args = parser.parse_args()
+
+panel = pd.read_csv(args.panel)
 targets = defaultdict(list)
 
 for row in panel.itertuples(index=False):
@@ -17,12 +26,12 @@ for row in panel.itertuples(index=False):
     })
 
 
-bam_path = "data/possorted_genome_bam.bam"
-bam = pysam.AlignmentFile(bam_path, "rb")
+bam = pysam.AlignmentFile(args.bam, "rb")
 
 counts = defaultdict(set)
 window = 200
 umi_best_match ={}
+
 for chrom, sites in targets.items():
     current_chrom = chrom
     if current_chrom not in bam.references:
@@ -66,10 +75,11 @@ for (cb, feature), umis in counts.items():
         'count' : len(umis)
     })
 
-df = pd.DataFrame(results)
-matrix = df.pivot(index='cell_barcode',columns='feature',values = 'count').fillna(0)
-matrix.to_csv("results/isoform_count.csv")
+if results:
+    df = pd.DataFrame(results)
+    matrix = df.pivot(index='cell_barcode',columns='feature',values = 'count').fillna(0)
+    matrix.to_csv(args.out)
+    print(f"✅ Success: {args.out} saved.")
+else:
+    print(f"⚠️ No reads assigned for {args.bam}")
 
-var_info = panel.copy()
-var_info['feature'] = var_info.apply(lambda r: f"{r.gene}_G{r.polyA_group}_{r.user_label}", axis=1)
-var_info.set_index('feature').to_csv("results/feature_metadata.csv")
