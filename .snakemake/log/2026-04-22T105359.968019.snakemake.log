@@ -1,0 +1,6 @@
+Building DAG of jobs...
+MissingInputException in rule build_panel in file /Users/renegibson/Desktop/githubrepo/IsoDecipher/Snakefile, line 13:
+Missing input files for rule build_panel:
+    output: results/panel_features.csv
+    affected files:
+        data/gene_list.txt

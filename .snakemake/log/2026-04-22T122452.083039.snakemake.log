@@ -1,0 +1,83 @@
+Building DAG of jobs...
+Using shell: /bin/bash
+Provided cores: 2
+Rules claiming more threads will be scaled down.
+Job stats:
+job             count
+------------  -------
+all                 1
+assign_reads        4
+total               5
+
+Select jobs to execute...
+
+[Wed Apr 22 12:24:55 2026]
+rule assign_reads:
+    input: results/panel_features.csv
+    output: results/counts/exp100_isoform_count.csv
+    log: logs/exp100_assign_reads.log
+    jobid: 2
+    reason: Missing output files: results/counts/exp100_isoform_count.csv
+    wildcards: sample=exp100
+    resources: tmpdir=/var/folders/zw/020w84513xl1z5hysj_t5k000000gn/T
+
+
+[Wed Apr 22 12:24:55 2026]
+rule assign_reads:
+    input: results/panel_features.csv
+    output: results/counts/exp106_isoform_count.csv
+    log: logs/exp106_assign_reads.log
+    jobid: 4
+    reason: Missing output files: results/counts/exp106_isoform_count.csv
+    wildcards: sample=exp106
+    resources: tmpdir=/var/folders/zw/020w84513xl1z5hysj_t5k000000gn/T
+
+[Wed Apr 22 12:56:50 2026]
+Finished job 2.
+1 of 5 steps (20%) done
+Select jobs to execute...
+
+[Wed Apr 22 12:56:50 2026]
+rule assign_reads:
+    input: results/panel_features.csv
+    output: results/counts/exp97_isoform_count.csv
+    log: logs/exp97_assign_reads.log
+    jobid: 6
+    reason: Missing output files: results/counts/exp97_isoform_count.csv
+    wildcards: sample=exp97
+    resources: tmpdir=/var/folders/zw/020w84513xl1z5hysj_t5k000000gn/T
+
+[Wed Apr 22 12:56:58 2026]
+Finished job 4.
+2 of 5 steps (40%) done
+Select jobs to execute...
+
+[Wed Apr 22 12:56:58 2026]
+rule assign_reads:
+    input: results/panel_features.csv
+    output: results/counts/exp105_isoform_count.csv
+    log: logs/exp105_assign_reads.log
+    jobid: 3
+    reason: Missing output files: results/counts/exp105_isoform_count.csv
+    wildcards: sample=exp105
+    resources: tmpdir=/var/folders/zw/020w84513xl1z5hysj_t5k000000gn/T
+
+[Wed Apr 22 13:13:12 2026]
+Finished job 6.
+3 of 5 steps (60%) done
+[Wed Apr 22 13:20:35 2026]
+Finished job 3.
+4 of 5 steps (80%) done
+Select jobs to execute...
+
+[Wed Apr 22 13:20:35 2026]
+localrule all:
+    input: results/panel_features.csv, results/counts/exp100_isoform_count.csv, results/counts/exp105_isoform_count.csv, results/counts/exp106_isoform_count.csv, results/counts/exp93_isoform_count.csv, results/counts/exp97_isoform_count.csv
+    jobid: 0
+    reason: Input files updated by another job: results/counts/exp97_isoform_count.csv, results/counts/exp105_isoform_count.csv, results/counts/exp100_isoform_count.csv, results/counts/exp106_isoform_count.csv
+    resources: tmpdir=/var/folders/zw/020w84513xl1z5hysj_t5k000000gn/T
+
+[Wed Apr 22 13:20:35 2026]
+Finished job 0.
+5 of 5 steps (100%) done
+Complete log: .snakemake/log/2026-04-22T122452.083039.snakemake.log

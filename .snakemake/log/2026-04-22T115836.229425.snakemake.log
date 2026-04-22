@@ -1,0 +1,38 @@
+Building DAG of jobs...
+Using shell: /bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job stats:
+job             count
+------------  -------
+all                 1
+assign_reads        5
+build_panel         1
+total               7
+
+Select jobs to execute...
+
+[Wed Apr 22 11:58:37 2026]
+rule build_panel:
+    input: data/Homo_sapiens.GRCh38.115.gtf, data/gene_list.txt
+    output: results/panel_features.csv
+    log: logs/build_panel.log
+    jobid: 1
+    reason: Forced execution
+    resources: tmpdir=/var/folders/zw/020w84513xl1z5hysj_t5k000000gn/T
+
+[Wed Apr 22 11:58:46 2026]
+Finished job 1.
+1 of 7 steps (14%) done
+Select jobs to execute...
+
+[Wed Apr 22 11:58:47 2026]
+rule assign_reads:
+    input: results/panel_features.csv
+    output: results/counts/exp97_isoform_count.csv
+    log: logs/exp97_assign_reads.log
+    jobid: 6
+    reason: Missing output files: results/counts/exp97_isoform_count.csv; Input files updated by another job: results/panel_features.csv
+    wildcards: sample=exp97
+    resources: tmpdir=/var/folders/zw/020w84513xl1z5hysj_t5k000000gn/T
+

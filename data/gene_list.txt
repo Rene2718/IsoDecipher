@@ -1,12 +1,10 @@
 # --- [Section 1] Housekeeping Controls ---
-
 ACTB
 GAPDH
 B2M
 HPRT1
 
 # --- [Section 2] Immunoglobulins (Heavy Chains) ---
-
 IGHM
 IGHG1
 IGHG2
@@ -17,7 +15,6 @@ IGHA2
 IGHE
 
 # --- [Section 3] Plasma Cell & Secretory Factory ---
-
 XBP1
 MZB1
 FKBP11
@@ -29,7 +26,18 @@ DERL3
 PDIA4
 PDIA6
 
-# --- [Section 4] APA & RNA Processing Machinery ---
+# --- [Section 4] Plasma Cell Transcription Factors ---
+IRF4
+PRDM1
+PAX5
+BCL6
+IKZF1
+IKZF3
+MEF2C
+EBF1
+SPIB
+
+# --- [Section 5] APA & RNA Processing Machinery ---
 CSTF2
 CSTF1
 CSTF3
@@ -43,9 +51,15 @@ FIP1L1
 WDR33
 CLP1
 PCF11
+SYMPK
+RBBP6
+HNRNPC
+HNRNPA1
+HNRNPA2B1
+PTBP1
+ELAVL1
 
-# --- [Section 5] BCR Signaling & Surface Markers ---
-CD79A
+# --- [Section 6] BCR Signaling & Surface Markers ---
 CD79A
 CD79B
 CD19
@@ -58,9 +72,24 @@ CR2
 BANK1
 BLNK
 TCL1A
+SYK
+BTK
+CD40
+CD40LG
 
+# --- [Section 7] T Cell & Immune Markers ---
+CD4
+CD8A
+CD8B
+FOXP3
+TOX
+TOX2
+CD3E
+CD3D
+CD3G
+CD28
 
-# --- [Section 6] Cytokine & Receptors ---
+# --- [Section 8] Cytokine & Receptors ---
 IL2RA
 IL6R
 IL7R
@@ -74,8 +103,7 @@ TNFSF13B
 FASLG
 ICOSLG
 
-
-# --- [Section 7] Immune Checkpoints (Key Targets) ---
+# --- [Section 9] Immune Checkpoints (Key Targets) ---
 CD274
 PDCD1
 CTLA4
@@ -84,9 +112,12 @@ TIGIT
 HAVCR2
 CD276
 PTPRC
+VSIR
+LILRB2
+SIGLEC7
+SIGLEC9
 
-# --- [Section 8] Cancer Metabolism & Proliferation ---
-
+# --- [Section 10] Cancer Metabolism & Proliferation ---
 PKM
 MKI67
 TOP2A
@@ -94,21 +125,24 @@ PCNA
 MYC
 VEGFA
 BCL2
+BCL2L1
 TP53
 KRAS
 EGFR
 MET
 FGFR2
+HIF1A
+LDHA
+G6PD
 
-
-# --- [Section 9] Immune Trafficking (APA-prone genes) ---
+# --- [Section 11] Immune Trafficking (APA-prone genes) ---
 CXCR4
+CXCR5
 CCR7
 SELL
+S1PR1
 
-
-# --- [Section 10] Adhesion & EMT (Invasion) ---
-
+# --- [Section 12] Adhesion & EMT (Invasion) ---
 CD44
 ITGA1
 ITGA2
@@ -146,6 +180,7 @@ SELPLG
 VCAM1
 PECAM1
 CDH1
+CDH2
 CDH5
 RAC1
 ENAH
@@ -155,7 +190,15 @@ MUC4
 FN1
 VIM
 
-# --- [Section 10] S100 Family ---
+# --- [Section 13] EMT Transcription Factors ---
+ZEB1
+ZEB2
+TWIST1
+TWIST2
+SNAI1
+SNAI2
+
+# --- [Section 14] S100 Family ---
 S100A1
 S100A2
 S100A3
@@ -171,9 +214,117 @@ S100A11
 S100A12
 S100A13
 S100A14
-S100A15
 S100A16
 S100B
 S100G
 S100P
 S100Z
+
+# --- [Section 15] SEC-seq Discovered Markers (SHAP top features) ---
+CD59
+NEAT1
+MTRNR2L12
+SDC1
+TXNIP
+TMX4
+LGALS3
+PTMA
+GADD45A
+CCND2
+H1FX
+
+# --- [Section 16] Epigenetic & Chromatin ---
+HDAC1
+HDAC2
+HDAC3
+DNMT1
+DNMT3A
+DNMT3B
+EZH2
+KDM6A
+KDM5C
+SETD2
+
+# --- [Section 17] Apoptosis & Survival ---
+BAX
+BAD
+BCL2L11
+CASP3
+CASP8
+CASP9
+SURVIVIN
+MCL1
+
+# --- [Section 18] Uncharacterized / Discovery ---
+FAM46C
+MANF
+TXNDC5
+PPIB
+CRELD2
+PRDX4
+DNAJB9
+DNAJC3
+
+# --- [Section 19] SEC-seq Paper Figures (All cells heatmap) ---
+ITM2C
+CYBA
+TMBIM6
+HLA-C
+PSME2
+SPCS2
+SUB1
+LMAN1
+SEC61B
+SPCS1
+COX7A2
+RPS27L
+ANKRD28
+GSTP1
+PRDX1
+UQCRH
+TMEM59
+ATP5PF
+BHLHE41
+KRT10
+MIF
+RASSF6
+UBC
+NDUFA13
+TACI
+CD52
+PTPN6
+CNPY2
+
+# --- [Section 20] SEC-seq Paper Figures (IgG cells heatmap) ---
+IGKC
+EMP3
+NDUFV2
+IFI30
+NDUFA4
+GLRX
+ATP5MC3
+HIST1H1C
+DAD1
+NUCB2
+IGFLR1
+KRTCAP2
+SNU13
+COX5A
+IFI35
+KDELR1
+SSR3
+
+# --- [Section 21] B cell / Plasma cell dot plot markers ---
+HLA-DRA
+HLA-DPB1
+SLAMF7
+SLAMF13C
+IL6A
+CALU
+KDELR2
+SEC11C
+SPRPB
+SPCS3
+ARF4
+SAR1B
+RRBP1

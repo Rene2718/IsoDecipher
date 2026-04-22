@@ -1,0 +1,25 @@
+Building DAG of jobs...
+Using shell: /bin/bash
+Provided cores: 1 (use --cores to define parallelism)
+Rules claiming more threads will be scaled down.
+Job stats:
+job            count
+-----------  -------
+build_panel        1
+total              1
+
+Select jobs to execute...
+
+[Wed Apr 22 12:08:42 2026]
+rule build_panel:
+    input: data/Homo_sapiens.GRCh38.115.gtf, data/gene_list.txt
+    output: results/panel_features.csv
+    log: logs/build_panel.log
+    jobid: 0
+    reason: Forced execution
+    resources: tmpdir=/var/folders/zw/020w84513xl1z5hysj_t5k000000gn/T
+
+[Wed Apr 22 12:08:50 2026]
+Finished job 0.
+1 of 7 steps (14%) done
+Complete log: .snakemake/log/2026-04-22T120840.969059.snakemake.log
