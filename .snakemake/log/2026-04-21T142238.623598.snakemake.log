@@ -1,9 +1,0 @@
-Building DAG of jobs...
-MissingInputException in rule all in file /Users/renegibson/Desktop/githubrepo/IsoDecipher/Snakefile, line 9:
-Missing input files for rule all:
-    affected files:
-        results/counts/exp106_isoform_counts.csv
-        results/counts/exp100_isoform_counts.csv
-        results/counts/exp105_isoform_counts.csv
-        results/counts/exp93_isoform_counts.csv
-        results/counts/exp97_isoform_counts.csv

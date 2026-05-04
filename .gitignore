@@ -1,8 +1,16 @@
-# Ignore test outputs
+# --- Project Data & Old Versions ---
 data/
 !data/gene_list.txt
-results/
 oldversion/
+
+# --- Results (The Trap Fix) ---
+results/*
+# only figure and panel_feature
+!results/figures/
+!results/panel_features.csv
+!results/panel_features_v2.csv
+
+# --- Bioinformatics Large Files ---
 *.bam
 *.bai
 *.fastq
@@ -12,8 +20,14 @@ oldversion/
 *.tsv
 *.gtf
 *.db
+*.h5ad
 
-# Ignore Python junk
+# --- Pipelines, Logs, and Models ---
+.snakemake/
+logs/
+models/
+
+# --- Python Junk ---
 __pycache__/
 *.py[cod]
 *$py.class
@@ -23,10 +37,11 @@ build/
 .venv/
 venv/
 
-# Ignore Jupyter notebook checkpoints
+# --- Jupyter Notebooks & Checkpoints ---
 .ipynb_checkpoints/
+*.ipynb
 
-# macOS Finder files
+# --- OS & IDE Files ---
 .DS_Store
 .vscode/
 .idea/

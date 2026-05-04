@@ -25,7 +25,8 @@ print(f"[IsoDecipher] Found samples: {SAMPLES}")
 rule all:
     input:
         "results/panel_features.csv",
-        expand("results/counts/{sample}_isoform_count.csv", sample=SAMPLES)
+        expand("results/counts/{sample}_isoform_count.csv", sample=SAMPLES),
+        "results/master_mosaic_combined.h5ad" 
 
 
 rule build_panel:
@@ -46,7 +47,9 @@ rule build_panel:
         """
 rule assign_reads:
     input:
-        panel = "results/panel_features.csv"
+        panel = "results/panel_features.csv",
+        barcodes = "data/samples/{sample}/filtered_feature_bc_matrix/barcodes.tsv.gz"
+
     output:
         "results/counts/{sample}_isoform_count.csv"
     log:
@@ -64,8 +67,27 @@ rule assign_reads:
         python IsoDecipher/scripts/assign_reads.py \
             --bam /tmp/{wildcards.sample}.bam \
             --panel {input.panel} \
+            --barcodes {input.barcodes} \
             --out {output} \
             2> {log}
         
         rm /tmp/{wildcards.sample}.bam /tmp/{wildcards.sample}.bam.bai
+        """
+rule integrate:
+    input:
+        expand("results/counts/{sample}_isoform_count.csv", sample=SAMPLES)
+    output:
+        "results/master_mosaic_combined.h5ad"
+    log:
+        "logs/integrate.log"
+    params:
+        samples = lambda wildcards: " ".join(SAMPLES)
+    shell:
+        """
+        python IsoDecipher/scripts/integrate_samples.py \
+            --samples {params.samples} \
+            --gcs_dir gs://isodecipher-bam/samples/samples \
+            --iso_dir results \
+            --out {output} \
+            2> {log}
         """

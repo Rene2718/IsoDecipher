@@ -311,8 +311,7 @@ def print_panel_summary(df):
     print(f"\n[SUMMARY] Group count distribution:")
     print(f"  1 group  (no analysis): {(groups_per_gene == 1).sum()} genes")
     print(f"  2 groups (PUI):         {(groups_per_gene == 2).sum()} genes")
-    print(f"  3-5 groups (PSI):       {((groups_per_gene >= 3) & (groups_per_gene <= 5)).sum()} genes")
-    print(f"  6+ groups (Entropy):    {(groups_per_gene >= 6).sum()} genes")
+    print(f"  3+ groups (Entropy):    {(groups_per_gene >= 3).sum()} genes")
 
 
 def main():
