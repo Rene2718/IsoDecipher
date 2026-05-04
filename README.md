@@ -63,12 +63,13 @@ cell_3           8                  1
 
 ### 1. IGHM APA Switching — Progressive Trajectory
 - PUI increases sigmoidally from ~0.38 (naive/acitvated B cells) to ~0.88 (plasma cells)
-- Sliding window bimodality coefficient: BC = 0.632 (window pt=0.70–0.89), confirming bifurcation signal
 
 ### 2. APA Commitment Precedes Class Switch Recombination
 - IgG/IgA cells enter the observable window with already-high PUI (~0.6–0.9)
-- Since all class-switched cells transited through IGHM, APA switching occurred **before** isotype switching
+- Unlike IGHM, which exhibits a gradual transition from a membrane-dominant (PUI ~0.4) to a secreted-dominant state (PUI ~0.9), class-switched isotypes (IGHG1, IGHG3, IGHA1) emerge with an already high PUI (~0.8–0.85) immediately following the AICDA expression window.
+- This indicates that the class switch recombination (CSR) event is tightly coupled with a rapid commitment to the secretory APA program. Class-switched cells do not repeat the membrane-probing phase but immediately prioritize secretory transcript production.
 - Membrane isoform counts decline synchronously across all four isotypes at terminal pseudotime — active downregulation, not passive dilution
+![APA Commitment & AID](results/figures/IGH_PUI_AICDA_nonlinear.png)
 
 ### 3. Critical Transition Point at Pseudotime ~0.858
 - Derivative analysis identifies membrane isoform drop at pt = 0.850–0.865 across all isotypes (range = 0.015)
