@@ -43,6 +43,7 @@ rule build_panel:
             --gtf {input.gtf} \
             --genes {input.genes} \
             --out {output.panel} \
+            --tolerance 10 \
             2> {log}
         """
 rule assign_reads:

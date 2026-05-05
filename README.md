@@ -116,6 +116,7 @@ Uses **GTF-derived polyA groups** to filter intronic noise, retain introns, and 
 - Skips retained introns, NMD, CDS-not-defined transcripts
 - Removes zero-UTR singleton groups
 - Always preserves dominant group
+- `--tolerance` controls transcript end clustering window (default: 10bp). Use `--tolerance 0` for exact-match only grouping, or `--tolerance 50` to reproduce legacy behaviour.
 
 ### 3. Zero-Ambiguity Strand-Aware Indexing
 Group 0 always = proximal polyA site, regardless of genomic strand.
@@ -165,7 +166,8 @@ pip install torchtext==0.18.0 scgpt scanpy anndata
 python IsoDecipher/scripts/build_panel_features.py \
     --gtf data/Homo_sapiens.GRCh38.115.gtf \
     --genes data/gene_list.txt \
-    --out results/panel_features_v2.csv
+    --out results/panel_features_v2.csv \
+    --tolerance 10
 ```
 
 ### Step 2: Assign reads
