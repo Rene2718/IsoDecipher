@@ -17,8 +17,13 @@ python IsoDecipher/scripts/build_panel_features.py \
     --gtf data/Homo_sapiens.GRCh38.115.gtf \
     --genes data/gene_list.txt \
     --out results/panel_features.csv \
+    [--tolerance 10] \
     [--custom_params custom.tsv]
     [--no-filter]
+
+--tolerance controls the global clustering window (default: 10bp).
+Use --tolerance 0 to group only transcripts with identical 3' end coordinates.
+Per-gene overrides via --custom_params take priority over --tolerance.
 
 By default, zero-UTR singleton groups are filtered out.
 Use --no-filter to keep all groups.
@@ -61,6 +66,10 @@ def parse_args():
     parser.add_argument("--db", help="Optional: specific path for gffutils DB")
     parser.add_argument("--out", required=True, help="Output CSV")
     parser.add_argument("--custom_params", help="Custom tolerance TSV/CSV")
+    parser.add_argument("--tolerance", type=int, default=10,
+                        help="Global clustering window for transcript ends in bp (default: 10). "
+                             "Use 0 to group only identical coordinates. "
+                             "Per-gene overrides via --custom_params still take priority.")
     parser.add_argument("--no-filter", action="store_true",
                         help="Disable zero-UTR singleton filter (keep all groups)")
     return parser.parse_args()
@@ -224,7 +233,7 @@ def collect_transcript_end(db, gene_list):
     return gene_data
 
 
-def cluster_transcript_ends(transcript_data, gene_name, param_dict, default_tolerance=50):
+def cluster_transcript_ends(transcript_data, gene_name, param_dict, default_tolerance=10):
     """
     Groups transcript ends based on a gene-specific or default tolerance.
 
@@ -330,6 +339,8 @@ def main():
     custom_params = load_custom_parameters(args.custom_params)
 
     print(f"[IsoDecipher] Collecting transcript ends for {len(gene_list)} genes...")
+    print(f"[IsoDecipher] Global clustering tolerance: {args.tolerance}bp "
+          f"({'exact match only' if args.tolerance == 0 else f'merging ends within {args.tolerance}bp'})")
     raw_gene_data = collect_transcript_end(db, gene_list)
 
     panel_rows = []
@@ -340,7 +351,10 @@ def main():
             continue
 
         # Annotation-level clustering
-        clusters = cluster_transcript_ends(transcripts, gene_name, custom_params)
+        clusters = cluster_transcript_ends(
+            transcripts, gene_name, custom_params,
+            default_tolerance=args.tolerance
+        )
 
         # Strand-aware sorting: group_0 = always proximal
         strand = transcripts[0]['strand']
@@ -368,6 +382,9 @@ def main():
                 "gene": gene_name,
                 "polyA_group": i,
                 "rep_coord": rep_coord,
+                "coord_min": min(coords),
+                "coord_max": max(coords),
+                "coord_spread": max(coords) - min(coords),
                 "strand": strand,
                 "chrom": cluster[0]['chrom'],
                 "avg_spliced_utr": round(avg_spliced_utr, 2),
