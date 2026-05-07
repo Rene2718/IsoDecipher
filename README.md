@@ -10,28 +10,6 @@ It recovers hidden biological signals—such as **Alternative Polyadenylation (A
 
 ---
 
-## Development Status
-
-| Step | Status |
-|------|--------|
-| Panel builder | ✅ Complete |
-| Annotation filter | ✅ Complete |
-| Read assignment | ✅ Complete |
-| Snakemake pipeline | ✅ Complete |
-| Multi-sample integration | ✅ Complete |
-| PUI/PSI/Entropy analysis | ✅ Complete |
-| APA trajectory analysis | ✅ Complete |
-| Bifurcation detection | ✅ Complete |
-| Critical transition point | ✅ Complete |
-| Waddington entropy validation | ✅ Complete |
-| APA delta summary (87 genes) | ✅ Complete |
-| SHAP / ML analysis | ✅ Complete |
-| GNN cell-autonomy analysis | ✅ Complete |
-| scGPT foundation model validation | ✅ Complete |
-| PBMC public dataset | ⏳ In progress |
-| Cancer dataset validation | ⏳ Pending |
-
----
 
 ## Concept
 
@@ -52,9 +30,9 @@ IsoDecipher **reinterprets the genomic positions of 3' reads** to recover polyA 
 ```
 Cell      IGHM_G0_Secreted   IGHM_G1_Membrane
 ----------------------------------------------
-cell_1          10                  2
+cell_1          100                 2
 cell_2           4                 14
-cell_3           8                  1
+cell_3          50                  1
 ```
 
 ---
@@ -135,7 +113,6 @@ Group 0 always = proximal polyA site, regardless of genomic strand.
 | 2 | **PUI** | log2(G0+1)/(log2(G0+1)+log2(G1+1)) — directional, interpretable |
 | 3+ | **Entropy** | Shannon entropy of polyA site distribution — order-free, robust |
 
-PSI (Proximal Shift Index) was removed as it assumes linear proximal→distal ordering across groups, which is not guaranteed by GTF annotation. Shannon Entropy makes no ordering assumption and is applicable to all multi-group genes.
 
 **NMD transcript handling**: By default, NMD (nonsense-mediated decay) transcripts are excluded. Use `--include-nmd` to include AS-NMD isoforms, which adds +271 features and promotes 14 genes from no-analysis to PUI/Entropy. AS-NMD represents a biologically meaningful post-transcriptional regulatory mechanism particularly relevant for RNA-binding proteins and splicing factors.
 
@@ -221,10 +198,9 @@ snakemake --cores 4 --config include_nmd=True
 | Sample | Day | Condition | Cells | Notes |
 |--------|-----|-----------|-------|-------|
 | exp93 | Day 10 | 2 conditions | 4,631 | |
-| exp97 | Day 13 | No IL21 | 7,226 | |
-| exp100 | Day 9 | SEC-seq | — | Removed (bacteria) |
-| exp105 | Day 13 | CD40L+CpG+IL21 | 7,751 | Rene's condition |
-| exp106 | Day 13 | CD40L+CpG+IL21 | 3,543 | Rene's condition |
+| exp97 | Day 13 | No IL21 | 7,226 | CITEseq|
+| exp105 | Day 13 | CD40L+CpG+IL21 | 7,751 | SECseq|
+| exp106 | Day 13 | CD40L+CpG+IL21 | 3,543 | SECseq|
 
 **Final dataset**: 21,670 cells after QC (MT% <15%, 500–5500 genes)
 
@@ -258,7 +234,7 @@ GTF annotation + gene panel (391 genes)
   Integration (GEX + Isoform + ADT → AnnData)
             │
             ▼
-  PUI / PSI / Entropy Analysis
+  PUI / Entropy Analysis
   ├── APA Trajectory (pseudotime)
   ├── Bifurcation Detection (BC > 0.555)
   ├── Critical Transition Point (derivative)
@@ -332,6 +308,28 @@ ESR1, PGR, ERBB2, PIK3CA, PTEN, AKT1, CDKN1B, GATA3, MAP3K1, MAP2K4, TBX3, RUNX1
 - **Adhesion & EMT**: CD44, VIM, FN1, CDH1, ZEB1/2, TWIST1/2, SNAI1/2
 - **Cancer metabolism**: PKM, LDHA, HIF1A, VEGFA
 - **S100 family**: S100A1-16, S100B, S100P, S100Z
+
+---
+## Development Status
+
+| Step | Status |
+|------|--------|
+| Panel builder | ✅ Complete |
+| Annotation filter | ✅ Complete |
+| Read assignment | ✅ Complete |
+| Snakemake pipeline | ✅ Complete |
+| Multi-sample integration | ✅ Complete |
+| PUI/Entropy analysis | ✅ Complete |
+| APA trajectory analysis | ✅ Complete |
+| Bifurcation detection | ✅ Complete |
+| Critical transition point | ✅ Complete |
+| Waddington entropy validation | ✅ Complete |
+| APA delta summary (87 genes) | ✅ Complete |
+| SHAP / ML analysis | ✅ Complete |
+| GNN cell-autonomy analysis | ✅ Complete |
+| scGPT foundation model validation | ✅ Complete |
+| PBMC public dataset | ⏳ In progress |
+| Cancer dataset validation | ⏳ Pending |
 
 ---
 
