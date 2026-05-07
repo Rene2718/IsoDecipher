@@ -7,6 +7,10 @@ os.makedirs("results/counts", exist_ok=True)
 GTF = "data/Homo_sapiens.GRCh38.115.gtf"
 GENES = "data/gene_list.txt"
 
+# Optional: include NMD transcripts in panel
+# Override with: snakemake --config include_nmd=True
+INCLUDE_NMD = config.get("include_nmd", False)
+
 # Auto-detect samples from GCS
 result = subprocess.run(
     ["gsutil", "ls", "gs://isodecipher-bam/samples/samples/"],
@@ -37,6 +41,8 @@ rule build_panel:
         panel = "results/panel_features.csv"
     log:
         "logs/build_panel.log"
+    params:
+        nmd_flag = "--include-nmd" if INCLUDE_NMD else ""
     shell:
         """
         python IsoDecipher/scripts/build_panel_features.py \
@@ -44,6 +50,7 @@ rule build_panel:
             --genes {input.genes} \
             --out {output.panel} \
             --tolerance 10 \
+            {params.nmd_flag} \
             2> {log}
         """
 rule assign_reads:

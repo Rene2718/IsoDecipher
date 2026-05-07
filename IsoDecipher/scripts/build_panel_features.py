@@ -35,14 +35,8 @@ import pandas as pd
 from collections import defaultdict
 import os
 
-# Biotypes to skip during transcript collection
-SKIP_BIOTYPES = {
-    "retained_intron",
-    "nonsense_mediated_decay",
-    "misc_RNA",
-    # lncRNA and processed_transcript removed:
-    # genes like NEAT1 are lncRNA with meaningful APA signal
-}
+
+
 
 # Biotypes that don't have CDS by definition — don't penalize them
 NO_CDS_BIOTYPES = {
@@ -72,6 +66,9 @@ def parse_args():
                              "Per-gene overrides via --custom_params still take priority.")
     parser.add_argument("--no-filter", action="store_true",
                         help="Disable zero-UTR singleton filter (keep all groups)")
+    parser.add_argument('--include-nmd', 
+                        action='store_true',
+                        help='Include NMD transcripts in panel (default: exclude)')
     return parser.parse_args()
 
 
@@ -115,7 +112,7 @@ def load_or_build_db(gtf):
     return gffutils.FeatureDB(db_path, keep_order=True)
 
 
-def collect_transcript_end(db, gene_list):
+def collect_transcript_end(db, gene_list, skip_biotypes):
     """
     Collect strand-aware transcript 3' boundaries for selected genes.
     Skips non-coding biotypes (retained intron, NMD, etc.)
@@ -162,7 +159,7 @@ def collect_transcript_end(db, gene_list):
 
             # --- Biotype filter ---
             biotype = tx.attributes.get("transcript_biotype", [""])[0]
-            if biotype in SKIP_BIOTYPES:
+            if biotype in skip_biotypes:
                 skipped_biotype += 1
                 continue
 
@@ -326,6 +323,17 @@ def print_panel_summary(df):
 def main():
     args = parse_args()
 
+    # Dynamic biotype filter (no global needed)
+    skip_biotypes = {
+        "retained_intron",
+        "misc_RNA",
+    }
+    if not args.include_nmd:
+        skip_biotypes.add("nonsense_mediated_decay")
+        print("[INFO] NMD transcripts excluded (default). Use --include-nmd to include.")
+    else:
+        print("[INFO] NMD transcripts INCLUDED (--include-nmd flag)")
+
     # Load DB and gene list
     db = load_or_build_db(args.gtf)
     if not os.path.exists(args.genes):
@@ -341,7 +349,7 @@ def main():
     print(f"[IsoDecipher] Collecting transcript ends for {len(gene_list)} genes...")
     print(f"[IsoDecipher] Global clustering tolerance: {args.tolerance}bp "
           f"({'exact match only' if args.tolerance == 0 else f'merging ends within {args.tolerance}bp'})")
-    raw_gene_data = collect_transcript_end(db, gene_list)
+    raw_gene_data = collect_transcript_end(db, gene_list, skip_biotypes)
 
     panel_rows = []
 

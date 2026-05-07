@@ -19,7 +19,7 @@ It recovers hidden biological signals—such as **Alternative Polyadenylation (A
 | Read assignment | ✅ Complete |
 | Snakemake pipeline | ✅ Complete |
 | Multi-sample integration | ✅ Complete |
-| PUI/Entropy analysis | ✅ Complete |
+| PUI/PSI/Entropy analysis | ✅ Complete |
 | APA trajectory analysis | ✅ Complete |
 | Bifurcation detection | ✅ Complete |
 | Critical transition point | ✅ Complete |
@@ -62,14 +62,18 @@ cell_3           8                  1
 ## Key Biological Findings
 
 ### 1. IGHM APA Switching — Progressive Trajectory
-- PUI increases sigmoidally from ~0.38 (naive/acitvated B cells) to ~0.88 (plasma cells)
+- PUI increases sigmoidally from ~0.38 (naive/activated B cells) to ~0.88 (plasma cells)
+- Sliding window bimodality coefficient: BC = 0.632 (window pt=0.70–0.89), confirming bifurcation signal
+- Two critical points identified per isotype via dG1/dt derivative analysis:
+  - **CP1** (pt~0.857): fastest membrane isoform drop — APA commitment begins
+  - **Terminal** (pt~0.876): dG1/dt returns to ~0 — membrane isoform stabilized at floor
 
-### 2. APA Commitment Precedes Class Switch Recombination
-- IgG/IgA cells enter the observable window with already-high PUI (~0.6–0.9)
-- Unlike IGHM, which exhibits a gradual transition from a membrane-dominant (PUI ~0.4) to a secreted-dominant state (PUI ~0.9), class-switched isotypes (IGHG1, IGHG3, IGHA1) emerge with an already high PUI (~0.8–0.85) immediately following the AICDA expression window.
-- This indicates that the class switch recombination (CSR) event is tightly coupled with a rapid commitment to the secretory APA program. Class-switched cells do not repeat the membrane-probing phase but immediately prioritize secretory transcript production.
-- Membrane isoform counts decline synchronously across all four isotypes at terminal pseudotime — active downregulation, not passive dilution
-![APA Commitment & AID](results/figures/IGH_PUI_AICDA_nonlinear.png)
+### 2. APA Commitment is Tightly Coupled to Class Switch Recombination
+- AICDA (AID enzyme) peaks at pt~0.40, coinciding with IgA/IgG3 first appearance
+- Unlike IGHM (gradual PUI 0.4→0.9), class-switched isotypes (IGHG1, IGHG3, IGHA1) emerge with already-high PUI (~0.8–0.85) immediately following the AICDA expression window
+- CSR is tightly coupled with rapid APA commitment to secretory program — class-switched cells do not repeat the membrane-probing phase
+- At the CP1→Terminal commitment window: IGHM secreted↓, IgG secreted↑, IGKC (kappa light chain) surges — coordinated antibody assembly during terminal commitment
+- Membrane isoform counts decline synchronously across all four isotypes — active downregulation, not passive dilution
 
 ### 3. Critical Transition Point at Pseudotime ~0.858
 - Derivative analysis identifies membrane isoform drop at pt = 0.850–0.865 across all isotypes (range = 0.015)
@@ -92,10 +96,14 @@ Two distinct APA regulatory programs at terminal commitment:
 - GCN (APA-based graph): R²=0.920
 - Conclusion: APA regulation is primarily cell-autonomous; GEX-based neighborhood adds noise
 
-### 6. scGPT Foundation Model Validation
-- 4000 cells (stratified across 4 samples) embedded with scGPT blood model
-- PAGA trajectory from scGPT embedding recapitulates IGHM PUI gradient (PUI 0.4→0.9)
-- scGPT (without batch correction) mapped day7 vs day 13 activated B cells into two clusters (scanpy-BBKNN failed)
+### 6. scGPT Foundation Model Validation — Reveals What BBKNN Hides
+- 4000 cells (stratified across 4 samples) embedded with scGPT blood pre-trained model
+- PAGA trajectory from scGPT embedding recapitulates IGHM PUI gradient (PUI 0.4→0.9) without any isoform supervision ✅
+- DPT pseudotime correlates with IGHM PUI gradient ✅
+- **scGPT vs BBKNN**: conventional batch correction (BBKNN) merges Day 7 and Day 13 activated B cells, creating artifactual trajectory branches. scGPT (no batch correction) correctly separates them:
+  - Cluster 7: Day 7 early activated B cells (ACTB high, PUI~0.39) — true root
+  - Cluster 3: Day 13 non-differentiating B cells (HLA-DRA, MS4A1 high) — dead end, isolated in PAGA
+- **IL21-dependent differentiation block**: exp97 (No IL21) cells plateau at PUI~0.79; IL21-stimulated cells reach PUI >0.9 — IL21 is required for terminal APA commitment
 - XIST-high cluster (cluster 9) identifies female donor cells
 
 ### 7. APA Delta Summary — 87 Genes, 4 Patterns
@@ -116,7 +124,6 @@ Uses **GTF-derived polyA groups** to filter intronic noise, retain introns, and 
 - Skips retained introns, NMD, CDS-not-defined transcripts
 - Removes zero-UTR singleton groups
 - Always preserves dominant group
-- `--tolerance` controls transcript end clustering window (default: 10bp). Use `--tolerance 0` for exact-match only grouping, or `--tolerance 50` to reproduce legacy behaviour.
 
 ### 3. Zero-Ambiguity Strand-Aware Indexing
 Group 0 always = proximal polyA site, regardless of genomic strand.
@@ -129,6 +136,16 @@ Group 0 always = proximal polyA site, regardless of genomic strand.
 | 3+ | **Entropy** | Shannon entropy of polyA site distribution — order-free, robust |
 
 PSI (Proximal Shift Index) was removed as it assumes linear proximal→distal ordering across groups, which is not guaranteed by GTF annotation. Shannon Entropy makes no ordering assumption and is applicable to all multi-group genes.
+
+**NMD transcript handling**: By default, NMD (nonsense-mediated decay) transcripts are excluded. Use `--include-nmd` to include AS-NMD isoforms, which adds +271 features and promotes 14 genes from no-analysis to PUI/Entropy. AS-NMD represents a biologically meaningful post-transcriptional regulatory mechanism particularly relevant for RNA-binding proteins and splicing factors.
+
+Panel summary (with `--include-nmd`):
+```
+1 group  (no analysis): 48 genes
+2 groups (PUI):         67 genes
+3+ groups (Entropy):    252 genes
+Total features:         1,808
+```
 
 ### 5. ML-Ready Features
 PUI/Entropy features achieve **64% accuracy** (vs 77% for full GEX) in predicting terminal plasma cell commitment using only 40 pure APA features — demonstrating APA captures the majority of cell state information in a 42-fold smaller feature space.
@@ -163,11 +180,20 @@ pip install torchtext==0.18.0 scgpt scanpy anndata
 
 ### Step 1: Build isoform feature panel
 ```bash
+# Default (NMD excluded)
 python IsoDecipher/scripts/build_panel_features.py \
     --gtf data/Homo_sapiens.GRCh38.115.gtf \
     --genes data/gene_list.txt \
-    --out results/panel_features_v2.csv \
+    --out results/panel_features.csv \
     --tolerance 10
+
+# Include NMD transcripts (AS-NMD regulatory isoforms)
+python IsoDecipher/scripts/build_panel_features.py \
+    --gtf data/Homo_sapiens.GRCh38.115.gtf \
+    --genes data/gene_list.txt \
+    --out results/panel_features.csv \
+    --tolerance 10 \
+    --include-nmd
 ```
 
 ### Step 2: Assign reads
@@ -181,7 +207,11 @@ python IsoDecipher/scripts/assign_reads.py \
 
 ### Step 3: Run full pipeline with Snakemake
 ```bash
+# Default (NMD excluded)
 snakemake --cores 4
+
+# Include NMD transcripts
+snakemake --cores 4 --config include_nmd=True
 ```
 
 ---
@@ -190,14 +220,15 @@ snakemake --cores 4
 
 | Sample | Day | Condition | Cells | Notes |
 |--------|-----|-----------|-------|-------|
-| exp93 | Day 10 | 2 conditions | 4,631 | | Rene's condition and Rene's mod condition wo CpG
-| exp97 | Day 13 | CD40L+CpG+comboNoIL21 | 7,226 | |
+| exp93 | Day 10 | 2 conditions | 4,631 | |
+| exp97 | Day 13 | No IL21 | 7,226 | |
+| exp100 | Day 9 | SEC-seq | — | Removed (bacteria) |
 | exp105 | Day 13 | CD40L+CpG+IL21 | 7,751 | Rene's condition |
 | exp106 | Day 13 | CD40L+CpG+IL21 | 3,543 | Rene's condition |
 
 **Final dataset**: 21,670 cells after QC (MT% <15%, 500–5500 genes)
 
-**Features**: GEX 36,330 + Isoform 858 + ADT 17
+**Features**: GEX 36,691 + Isoform 1,808 (with NMD) + ADT 17
 
 ---
 
@@ -208,9 +239,10 @@ GTF annotation + gene panel (391 genes)
             │
             ▼
      Panel Builder + Annotation Filter
+     (--include-nmd flag for AS-NMD isoforms)
             │
             ▼
-   panel_features_v2.csv (1329 features, 367 genes)
+   panel_features.csv (1,808 features with NMD / 1,537 without, 367 genes)
             │
             ▼
   Cell Ranger BAM × N samples
@@ -226,7 +258,7 @@ GTF annotation + gene panel (391 genes)
   Integration (GEX + Isoform + ADT → AnnData)
             │
             ▼
-  PUI / Entropy Analysis
+  PUI / PSI / Entropy Analysis
   ├── APA Trajectory (pseudotime)
   ├── Bifurcation Detection (BC > 0.555)
   ├── Critical Transition Point (derivative)
@@ -243,16 +275,14 @@ GTF annotation + gene panel (391 genes)
 | Figure | Content | Status |
 |--------|---------|--------|
 | Figure 1 | Tool overview, IGHM example | ⏳ |
-| Figure 2 | IGH APA trajectory + class-switched IG show PUI delay | ✅ |
+| Figure 2 | IGH APA trajectory + membrane drop | ✅ |
 | Figure 3 | Critical transition point (BC, derivative, G1=0 fraction) | ✅ |
-| Figure 4 | Critical points stage analysis | ✅ |
-| Figure 5 | MORE IN PROGRESS 
-| Supp | scGPT foundation model validation (UMAP, PAGA, DPT) | ✅ |
-| NEXT analysis| PBMC validation, cancer dataset | ⏳ |
-
-### Results Gallery
-![Figure 2: IGH APA Trajectory](results/figures/IGH_overlay_full.png)
-![Figure 3: Critical Transition Point Analysis](results/figures/G1_derivative_two_points.png)
+| Figure 4 | GEX DE at critical point (volcano, GSEA, TF switching) | ✅ |
+| Figure 5 | Waddington entropy + SHAP + model comparison | ✅ |
+| Figure 6 | JCHAIN isotype-specific APA | ✅ |
+| Figure 7 | APA delta summary (87 genes, 4 patterns) | ✅ |
+| Figure 8 | scGPT validation (UMAP, PAGA, DPT) | ✅ |
+| Supp | PBMC validation, cancer dataset | ⏳ |
 
 ---
 
