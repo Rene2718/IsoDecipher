@@ -105,7 +105,7 @@ Piecewise linear modeling identifies two conserved changepoints per isotype: G1 
 
 Bimodality analysis at the switching window confirms that G1-high and G1-low cells genuinely coexist at this transition (BC > 0.555 across all isotypes: IGHM: 0.624, IGHG1: 0.564, IGHG3: 0.670, IGHA1: 0.565), consistent with a bistable commitment event rather than a continuous gradient. Waddington landscape analysis further confirms progressive energy landscape restructuring across stages — the G1-high attractor destabilizes at CP1 and the G1-low state becomes the sole deep energy well at terminal differentiation, reflecting irreversible plasma cell commitment.
 
-### Figure 3: TENT5C secreted isoform co-induction with IgH G0
+### Figure 3: TENT5C is co-induced with the IgH secreted isoform at plasma cell commitment
 ![Figure 3](results/figures/TENT5C_G0_horizontal.png)
 
 DEG analysis on IsoDecipher-defined Before/Switching/Terminal stages identifies TENT5C — a cytoplasmic poly(A) polymerase that stabilizes immunoglobulin heavy chain mRNAs by extending their poly(A) tails — as co-upregulated with the APA switch. By leveraging BCR downregulation as a high-resolution molecular ruler for cell state, IsoDecipher captures a critical commitment transition that total gene count pipelines overlook — and critically, enables downstream trajectory analysis that pinpoints which isoform event TENT5C tracks. Cross-correlation of smoothed pseudotime trajectories confirms TENT5C induction is temporally aligned with G0 upregulation at lag=0 across all class-switched isotypes (IGHG1, IGHG3, IGHA1), not with G1 decline — identifying it as the most directly co-regulated gene with the secreted isoform switch rather than a general plasma cell marker.
