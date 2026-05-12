@@ -10,7 +10,6 @@ It recovers hidden biological signals—such as **Alternative Polyadenylation (A
 
 ---
 
-
 ## Concept
 
 Standard scRNA-seq pipelines collapse transcript isoforms into **gene-level counts**.
@@ -37,72 +36,37 @@ cell_3          50                  1
 
 ---
 
-## Key Biological Findings
-
-### 1. IGHM APA Switching — Progressive Trajectory
-- PUI increases sigmoidally from ~0.38 (naive/activated B cells) to ~0.88 (plasma cells)
-- Sliding window bimodality coefficient: BC = 0.632 (window pt=0.70–0.89), confirming bifurcation signal
-- Two critical points identified per isotype via dG1/dt derivative analysis:
-  - **CP1** (pt~0.857): fastest membrane isoform drop — APA commitment begins
-  - **Terminal** (pt~0.876): dG1/dt returns to ~0 — membrane isoform stabilized at floor
-
-### 2. APA Commitment is Tightly Coupled to Class Switch Recombination
-- AICDA (AID enzyme) peaks at pt~0.40, coinciding with IgA/IgG3 first appearance
-- Unlike IGHM (gradual PUI 0.4→0.9), class-switched isotypes (IGHG1, IGHG3, IGHA1) emerge with already-high PUI (~0.8–0.85) immediately following the AICDA expression window
-- CSR is tightly coupled with rapid APA commitment to secretory program — class-switched cells do not repeat the membrane-probing phase
-- At the CP1→Terminal commitment window: IGHM secreted↓, IgG secreted↑, IGKC (kappa light chain) surges — coordinated antibody assembly during terminal commitment
-- Membrane isoform counts decline synchronously across all four isotypes — active downregulation, not passive dilution
-
-### 3. Critical Transition Point at Pseudotime ~0.858
-- Derivative analysis identifies membrane isoform drop at pt = 0.850–0.865 across all isotypes (range = 0.015)
-- G1=0 fraction shows sigmoid jump from ~5% to ~80% at this point
-- GEX DE at critical point: **upregulated** — SSR4, FKBP11, SPCS2/3, CD38, XBP1 (ER secretory program); **downregulated** — MS4A1, PAX5, HLA-DRA (B cell identity)
-- Bootstrap-stable genes (100 resamples): 71 up, 518 down
-
-### 4. Waddington Landscape Validation
-Two distinct APA regulatory programs at terminal commitment:
-
-| Pattern | Genes | Biology |
-|---------|-------|---------|
-| Converge ↓ | CD59, TMBIM6, IGFLR1 | Terminal cells converge to dominant isoform |
-| Diversify ↑ | FKBP11, TXNIP | ER secretory genes maintain isoform diversity |
-| Stable → | GAPDH, B2M | Constitutive housekeeping (negative controls) |
-
-### 5. APA is Cell-Autonomous (GNN Analysis)
-- MLP (no graph): R²=0.981 for TMBIM6 entropy prediction
-- GCN (GEX-based graph): R²=0.368
-- GCN (APA-based graph): R²=0.920
-- Conclusion: APA regulation is primarily cell-autonomous; GEX-based neighborhood adds noise
-
-### 6. scGPT Foundation Model Validation — Reveals What BBKNN Hides
-- 4000 cells (stratified across 4 samples) embedded with scGPT blood pre-trained model
-- PAGA trajectory from scGPT embedding recapitulates IGHM PUI gradient (PUI 0.4→0.9) without any isoform supervision ✅
-- DPT pseudotime correlates with IGHM PUI gradient ✅
-- **scGPT vs BBKNN**: conventional batch correction (BBKNN) merges Day 7 and Day 13 activated B cells, creating artifactual trajectory branches. scGPT (no batch correction) correctly separates them:
-  - Cluster 7: Day 7 early activated B cells (ACTB high, PUI~0.39) — true root
-  - Cluster 3: Day 13 non-differentiating B cells (HLA-DRA, MS4A1 high) — dead end, isolated in PAGA
-- **IL21-dependent differentiation block**: exp97 (No IL21) cells plateau at PUI~0.79; IL21-stimulated cells reach PUI >0.9 — IL21 is required for terminal APA commitment
-- XIST-high cluster (cluster 9) identifies female donor cells
-
-### 7. APA Delta Summary — 87 Genes, 4 Patterns
-Systematic quantification of APA change across B cell differentiation:
-- **32 converge genes**: TMBIM6 (Δ=-0.454), CD59 (Δ=-0.311), IGFLR1, PTMA, MS4A1...
-- **12 peak genes**: SSR3, SPCS2, LDHA, HNRNPC (peak at Late, then partial return)
-- **20 diversify genes**: TXNIP (Δ=+0.179), FKBP11 (Δ=+0.182), PABPN1...
-- **23 stable genes**: GAPDH, B2M, NDUFA4 (negative controls, Δ≈0)
-
----
-
 ## Why IsoDecipher?
+
+### Comparison with existing tools
+
+| Feature | scAPA | Sierra | MAAPER | IsoDecipher |
+|---------|-------|--------|--------|-------------|
+| Reference | De novo | De novo | GTF | GTF |
+| Feature names | Coordinates | Coordinates | Gene-based | Gene+Group |
+| Noise filter | ❌ | ❌ | Partial | ✅ |
+| Biotype filter | ❌ | ❌ | ❌ | ✅ |
+| NMD option | ❌ | ❌ | ❌ | ✅ |
+| Scanpy ready | ❌ | ❌ | ❌ | ✅ |
+| IG isoform logic | ❌ | ❌ | ❌ | ✅ |
+| Metric selection | Manual | Manual | Manual | Adaptive |
+
+IsoDecipher is the only tool that combines GTF-anchored noise suppression, biotype-aware filtering, biologically interpretable feature naming (gene+group), and adaptive metric selection into a scanpy-compatible output — enabling isoform-resolved single-cell analysis without post-processing.
 
 ### 1. Biologically Anchored Noise Suppression
 Uses **GTF-derived polyA groups** to filter intronic noise, retain introns, and NMD transcripts. Reduces zero-UTR features from ~47% to under 6%.
 
 ### 2. Annotation Quality Filter
-- Skips retained introns, NMD, CDS-not-defined transcripts
-- Removes zero-UTR singleton groups
-- Always preserves dominant group
-
+- Skips retained introns and NMD transcripts (default; use --include-nmd to retain NMD)
+- Skips transcripts with no CDS annotation
+- Removes zero-UTR singleton groups: transcripts where the polyA site 
+  immediately follows the stop codon (zero 3' UTR length), leaving no 
+  other group for comparison — PUI/Entropy cannot be computed
+- Always preserves the dominant group per gene, even if all other 
+  groups are filtered. Genes with only one remaining group are 
+  retained in the panel as raw count features but excluded from 
+  PUI/Entropy analysis (reported as "no analysis" in panel summary).
+  
 ### 3. Zero-Ambiguity Strand-Aware Indexing
 Group 0 always = proximal polyA site, regardless of genomic strand.
 
@@ -110,9 +74,8 @@ Group 0 always = proximal polyA site, regardless of genomic strand.
 
 | Groups | Method | Description |
 |--------|--------|-------------|
-| 2 | **PUI** | log2(G0+1)/(log2(G0+1)+log2(G1+1)) — directional, interpretable |
+| 2 | **PUI** | log2(G0+1)/(log2(G0+1)+log2(G1+1)) — directional, interpretable. Log-normalization is essential for high-dynamic-range genes such as immunoglobulins, where raw G0/G1 ratios can span several orders of magnitude at terminal differentiation. |
 | 3+ | **Entropy** | Shannon entropy of polyA site distribution — order-free, robust |
-
 
 **NMD transcript handling**: By default, NMD (nonsense-mediated decay) transcripts are excluded. Use `--include-nmd` to include AS-NMD isoforms, which adds +271 features and promotes 14 genes from no-analysis to PUI/Entropy. AS-NMD represents a biologically meaningful post-transcriptional regulatory mechanism particularly relevant for RNA-binding proteins and splicing factors.
 
@@ -129,14 +92,33 @@ PUI/Entropy features achieve **64% accuracy** (vs 77% for full GEX) in predictin
 
 ---
 
+## Key Biological Findings
+
+### Figure 1: IgH isoform dynamics along B cell differentiation
+![Figure 1](results/figures/IGH_DualAxis_Switch.png)
+IsoDecipher recovers membrane (G1) and secreted (G0) isoforms of immunoglobulin heavy chain transcripts across B cell differentiation for four isotypes (IGHM, IGHG1, IGHG3, IGHA1). The membrane-to-secreted switch arises from APA: G1 utilizes a distal polyadenylation site retaining transmembrane domain exons; G0 uses a proximal site enabling antibody secretion. Cell Ranger total counts increase monotonically across pseudotime for all isotypes, providing no resolution of this transition — IsoDecipher recovers the directionality directly from 3′ BAM files. The G1 decline is a genuine per-cell signal, not a cell-density artifact (minimum n=50 isotype-matched cells per window).
+
+### Figure 2: Quantitative mapping of IgH membrane isoform dynamics
+![Figure 2](results/figures/G1_piecewise_fit.png)
+
+Piecewise linear modeling identifies two conserved changepoints per isotype: G1 downregulation initiates at CP1 (~0.72–0.77) and completes at CP2 (~0.83–0.86), defining a narrow ~0.09–0.13 pseudotime execution window consistent across all isotypes regardless of class-switch identity — suggesting membrane isoform downregulation is triggered at a shared B cell commitment checkpoint. 
+
+Bimodality analysis at the switching window confirms that G1-high and G1-low cells genuinely coexist at this transition (BC > 0.555 across all isotypes: IGHM: 0.624, IGHG1: 0.564, IGHG3: 0.670, IGHA1: 0.565), consistent with a bistable commitment event rather than a continuous gradient. Waddington landscape analysis further confirms progressive energy landscape restructuring across stages — the G1-high attractor destabilizes at CP1 and the G1-low state becomes the sole deep energy well at terminal differentiation, reflecting irreversible plasma cell commitment.
+
+### Figure 3: TENT5C secreted isoform co-induction with IgH G0
+![Figure 3](results/figures/TENT5C_G0_horizontal.png)
+
+DEG analysis on IsoDecipher-defined Before/Switching/Terminal stages identifies TENT5C — a cytoplasmic poly(A) polymerase that stabilizes immunoglobulin heavy chain mRNAs by extending their poly(A) tails — as co-upregulated with the APA switch. By leveraging BCR downregulation as a high-resolution molecular ruler for cell state, IsoDecipher captures a critical commitment transition that total gene count pipelines overlook — and critically, enables downstream trajectory analysis that pinpoints which isoform event TENT5C tracks. Cross-correlation of smoothed pseudotime trajectories confirms TENT5C induction is temporally aligned with G0 upregulation at lag=0 across all class-switched isotypes (IGHG1, IGHG3, IGHA1), not with G1 decline — identifying it as the most directly co-regulated gene with the secreted isoform switch rather than a general plasma cell marker.
+
+Notably, TENT5C (FAM46C) is recurrently mutated in multiple myeloma (~13% of cases) — its specific coupling to the secreted isoform switch during normal plasma cell commitment provides a mechanistic rationale for why its loss dysregulates antibody secretion in malignant plasma cells. Beyond myeloma, pathogenic plasma cells in autoimmune diseases such as SLE and rheumatoid arthritis arise from aberrant passage through this same commitment checkpoint; TENT5C's co-induction with the secreted isoform switch identifies it as a candidate target for selectively disrupting autoreactive plasma cell commitment, complementing terminal plasma cell targeting via BCMA/TNFRSF17 — also identified in the IsoDecipher-defined terminal DEG analysis.
+---
+
 ## Installation
 
 ```bash
 mamba create -n iso_decipher python=3.10 -y
 mamba activate iso_decipher
 
-pip install gffutils pysam pandas numpy scanpy anndata \
-            matplotlib seaborn scipy scikit-learn shap
 ```
 
 For pipeline orchestration:
@@ -236,37 +218,17 @@ GTF annotation + gene panel (391 genes)
             ▼
   PUI / Entropy Analysis
   ├── APA Trajectory (pseudotime)
-  ├── Bifurcation Detection (BC > 0.555)
-  ├── Critical Transition Point (derivative)
-  ├── Waddington Entropy Landscape
-  ├── SHAP Feature Importance
-  ├── GNN Cell-Autonomy Analysis
-  └── scGPT Foundation Model Validation
+  ├── Piecewise Linear Changepoint Detection
+  ├── Waddington Landscape
+  ├── Isoform-defined DEG staging
+  └── TENT5C co-regulation analysis
 ```
 
----
-
-## Figure Roadmap (Current)
-
-| Figure | Content | Status |
-|--------|---------|--------|
-| Figure 1 | Tool overview, IGHM example | ⏳ |
-| Figure 2 | IGH APA trajectory + membrane drop | ✅ |
-| Figure 3 | Critical transition point (BC, derivative, G1=0 fraction) | ✅ |
-| Figure 4 | GEX DE at critical point (volcano, GSEA, TF switching) | ✅ |
-| Figure 5 | Waddington entropy + SHAP + model comparison | ✅ |
-| Figure 6 | JCHAIN isotype-specific APA | ✅ |
-| Figure 7 | APA delta summary (87 genes, 4 patterns) | ✅ |
-| Figure 8 | scGPT validation (UMAP, PAGA, DPT) | ✅ |
-| Supp | PBMC validation, cancer dataset | ⏳ |
 
 ---
 
-## Future Directions
-
-Develop an **isoform-aware foundation model** trained on IsoDecipher-quantified APA profiles across normal differentiation trajectories. Such a model could identify oncogenic APA deviations by comparing tumor cell isoform landscapes to the normal differentiation reference established here.
-
-Extended approach: **BAM-level tokenization** incorporating polyA signal sequence context (PAS: AATAAA and variants, AU-rich elements, ±200bp window) to detect mutation-driven APA changes and novel unannotated polyA sites in tumor samples.
+## Future Directions 
+**[IsoDecipher-GPT](https://github.com/rene2718/isodecipher-gpt)** *(in development)* — a hierarchical BAM-level foundation model that learns APA regulatory grammar directly from raw 3' reads, bypassing GTF annotation entirely. Unlike scGPT or DNABERT, which are bound to fixed gene vocabularies or static DNA sequence, IsoDecipher-GPT tokenizes reads at the polyA signal level (PAS: AATAAA and variants) with single-cell resolution via CB/UB tags — enabling de novo discovery of mutation-driven APA shifts and novel cleavage sites that count-matrix pipelines are structurally incapable of observing.
 
 ---
 
@@ -274,16 +236,15 @@ Extended approach: **BAM-level tokenization** incorporating polyA signal sequenc
 
 IsoDecipher ships with a curated panel of **391 genes** across 22 biological categories, designed for comprehensive oncology-immunology studies including PBMC, B cell differentiation, and cancer datasets (prostate, lung, breast).
 
-### Core Biology
-- Housekeeping controls (ACTB, GAPDH, B2M, UBC, PPIB)
+
+### Immunology
 - Immunoglobulins (IGHM, IGHG1-4, IGHA1-2, IGHE)
 - Plasma cell & secretory pathway (XBP1, MZB1, HSPA5, FKBP11, SSR3, SPCS2...)
 - Plasma cell transcription factors (IRF4, PRDM1, PAX5, BCL6...)
-- APA & RNA processing machinery (CSTF1-3, NUDT21, CPSF1-4, SF3B1, U2AF1, RBM10...)
 - BCR signaling & surface markers (CD79A/B, CD19, CD22, BTK, SYK...)
 - T cell markers (CD4, CD8A/B, FOXP3, TOX...)
 - Immune checkpoints (CD274/PD-L1, PDCD1, CTLA4, LAG3, TIGIT...)
-- SEC-seq discovered markers (CD59, NEAT1, SDC1, TXNIP, MIF...)
+- SEC-seq discovered markers (CD59, NEAT1, TXNIP, MIF...)
 
 ### Oncology — Prostate Cancer
 PTEN, AR, RB1, BRCA1, BRCA2, CDK12, PIK3CA, PIK3CB, AKT1, AKT3, MTOR, TSC1, TSC2, STAT5A, STAT5B, JAK1, JAK2, SOCS1, SOCS3, CDK4, CDK6, CCND1, CDKN1B, CDKN2A, ATM, ATR, CHEK2, FOXA1, HOXB13, KLK3, NKX3-1, CXCR4
@@ -309,27 +270,8 @@ ESR1, PGR, ERBB2, PIK3CA, PTEN, AKT1, CDKN1B, GATA3, MAP3K1, MAP2K4, TBX3, RUNX1
 - **Cancer metabolism**: PKM, LDHA, HIF1A, VEGFA
 - **S100 family**: S100A1-16, S100B, S100P, S100Z
 
----
-## Development Status
-
-| Step | Status |
-|------|--------|
-| Panel builder | ✅ Complete |
-| Annotation filter | ✅ Complete |
-| Read assignment | ✅ Complete |
-| Snakemake pipeline | ✅ Complete |
-| Multi-sample integration | ✅ Complete |
-| PUI/Entropy analysis | ✅ Complete |
-| APA trajectory analysis | ✅ Complete |
-| Bifurcation detection | ✅ Complete |
-| Critical transition point | ✅ Complete |
-| Waddington entropy validation | ✅ Complete |
-| APA delta summary (87 genes) | ✅ Complete |
-| SHAP / ML analysis | ✅ Complete |
-| GNN cell-autonomy analysis | ✅ Complete |
-| scGPT foundation model validation | ✅ Complete |
-| PBMC public dataset | ⏳ In progress |
-| Cancer dataset validation | ⏳ Pending |
+- Housekeeping controls (ACTB, GAPDH, B2M, UBC, PPIB)
+- APA & RNA processing machinery (CSTF1-3, NUDT21, CPSF1-4, SF3B1, U2AF1, RBM10...)
 
 ---
 
