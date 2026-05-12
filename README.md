@@ -121,6 +121,7 @@ IsoDecipher reveals coordinated genome-wide APA restructuring coinciding with th
 ### Figure 5: CD59 and TMBIM6 undergo progressive APA switching during blast-to-plasma cell maturation
 
 ![Figure 5](results/figures/UTR_gene_validation.png)
+
 Gene-level weighted mean UTR trajectories confirm genuine APA switching for CD59 and TMBIM6, with B2M as a negative control. CD59 (14 isoforms, Δtotal = −699 bp) is broadly expressed across blast/plasmablast and plasma cell clusters (pct 0.47–0.62) but nearly absent in activated B cells (cluster 2, pct=0.083) — its continuous UTR shortening from ~650 bp to ~250 bp reflects genuine isoform switching during blast/plasmablast-to-plasma cell maturation rather than an activated B cell program. TMBIM6 (13 isoforms, Δtotal = −600 bp) shows the most striking signal — a monotonic decline from ~900 bp to ~150 bp spanning the entire pseudotime range. TMBIM6 is virtually absent in activated B cells (cluster 2, pct=0.031), switches on in cluster 3 blast/plasmablasts, and reaches maximum expression in terminal plasma cell clusters — its UTR shortening therefore tracks progressive isoform switching entirely within the blast/plasmablast-to-plasma cell maturation axis. The discrete horizontal bands in the TMBIM6 scatter reflect genuine discrete isoform states rather than noise. B2M (Δtotal = −7 bp), dominantly expressed in activated B cells throughout, shows a flat UTR trajectory confirming the method detects genuine isoform switching rather than expression-level artifacts.
 ---
 
