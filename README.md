@@ -95,7 +95,7 @@ PUI/Entropy features achieve **64% accuracy** (vs 77% for full GEX) in predictin
 ## Key Biological Findings
 
 ### Figure 1: IgH isoform dynamics along B cell differentiation
-![Figure 1](results/figures/IGH_DualAxis_Switch.png)
+![Figure 1](results/figures/IGH_Horizontal_Switch.png)
 IsoDecipher recovers membrane (G1) and secreted (G0) isoforms of immunoglobulin heavy chain transcripts across B cell differentiation for four isotypes (IGHM, IGHG1, IGHG3, IGHA1). The membrane-to-secreted switch arises from APA: G1 utilizes a distal polyadenylation site retaining transmembrane domain exons; G0 uses a proximal site enabling antibody secretion. Cell Ranger total counts increase monotonically across pseudotime for all isotypes, providing no resolution of this transition — IsoDecipher recovers the directionality directly from 3′ BAM files. The G1 decline is a genuine per-cell signal, not a cell-density artifact (minimum n=50 isotype-matched cells per window).
 
 ### Figure 2: Quantitative mapping of IgH membrane isoform dynamics
