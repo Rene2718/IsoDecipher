@@ -30,8 +30,6 @@ cell_3         9
 
 IsoDecipher **reinterprets the genomic positions of 3' reads** to recover polyA site usage:
 
-![IGHM transcript structure](results/figures/IGHM_transcript_structure.png)
-
 ```
 Cell      IGHM_G0_Secreted   IGHM_G1_Membrane
 ----------------------------------------------
@@ -48,6 +46,7 @@ For genes with multiple transcripts sharing nearby cleavage sites, IsoDecipher c
 ![CD59 transcript structure](results/figures/CD59_transcript_structure.png)
 
 CD59 has 32 annotated transcripts across 14 polyA groups. IsoDecipher consolidates the 7 transcripts sharing the distal cleavage site into a single G8 group (1,262bp UTR), while the single proximal transcript CD59-212 forms G0 (179bp UTR). This grouping recovers the full isoform switching signal across plasma cell differentiation — signal that would be fragmented and lost by coordinate-based de novo peak callers.
+
 ---
 
 ## Why IsoDecipher?
