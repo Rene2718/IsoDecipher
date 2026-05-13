@@ -12,7 +12,11 @@ It recovers hidden biological signals—such as **Alternative Polyadenylation (A
 
 ## Concept
 
-Standard scRNA-seq pipelines collapse transcript isoforms into **gene-level counts**.
+Standard scRNA-seq pipelines collapse transcript isoforms into gene-level counts, losing the isoform information that determines cell function. IsoDecipher recovers this information by reinterpreting the genomic positions of 3' reads to quantify polyadenylation site usage.
+
+![IGHM isoform schematic](results/figures/IGHM_transcript_structure_schematic.png)
+
+The membrane-to-secreted isoform switch of immunoglobulin heavy chain genes — driven by alternative polyadenylation — determines whether a B cell displays BCR on its surface or secretes antibody. This transition is invisible to Cellranger total GEX but is directly quantifiable by IsoDecipher from standard 3' BAM files.
 
 ```
 scRNA-seq reads → Cell Ranger → gene counts (isoform lost)
@@ -26,6 +30,8 @@ cell_3         9
 
 IsoDecipher **reinterprets the genomic positions of 3' reads** to recover polyA site usage:
 
+![IGHM transcript structure](results/figures/IGHM_transcript_structure.png)
+
 ```
 Cell      IGHM_G0_Secreted   IGHM_G1_Membrane
 ----------------------------------------------
@@ -34,11 +40,17 @@ cell_2           4                 14
 cell_3          50                  1
 ```
 
+
+### GTF-anchored polyA site grouping
+
+For genes with multiple transcripts sharing nearby cleavage sites, IsoDecipher consolidates reads within a ±10bp tolerance window into biologically meaningful groups — preventing signal fragmentation across low-confidence peaks that de novo methods would discard as noise.
+
+![CD59 transcript structure](results/figures/CD59_transcript_structure.png)
+
+CD59 has 32 annotated transcripts across 14 polyA groups. IsoDecipher consolidates the 7 transcripts sharing the distal cleavage site into a single G8 group (1,262bp UTR), while the single proximal transcript CD59-212 forms G0 (179bp UTR). This grouping recovers the full isoform switching signal across plasma cell differentiation — signal that would be fragmented and lost by coordinate-based de novo peak callers.
 ---
 
 ## Why IsoDecipher?
-
-### Comparison with existing tools
 
 | Feature | scAPA | Sierra | MAAPER | IsoDecipher |
 |---------|-------|--------|--------|-------------|
@@ -47,48 +59,16 @@ cell_3          50                  1
 | Noise filter | ❌ | ❌ | Partial | ✅ |
 | Biotype filter | ❌ | ❌ | ❌ | ✅ |
 | NMD option | ❌ | ❌ | ❌ | ✅ |
+| Transcript consolidation | ❌ | ❌ | Partial | ✅ |
 | Scanpy ready | ❌ | ❌ | ❌ | ✅ |
 | IG isoform logic | ❌ | ❌ | ❌ | ✅ |
 | Metric selection | Manual | Manual | Manual | Adaptive |
 
 IsoDecipher is the only tool that combines GTF-anchored noise suppression, biotype-aware filtering, biologically interpretable feature naming (gene+group), and adaptive metric selection into a scanpy-compatible output — enabling isoform-resolved single-cell analysis without post-processing.
 
-### 1. Biologically Anchored Noise Suppression
-Uses **GTF-derived polyA groups** to filter intronic noise, retain introns, and NMD transcripts. Reduces zero-UTR features from ~47% to under 6%.
+**Adaptive metrics:** PUI (2 isoform groups) or Shannon entropy (3+ groups) are selected automatically. PUI uses log-normalization essential for high-dynamic-range genes such as immunoglobulins. By default NMD transcripts are excluded; use `--include-nmd` to add AS-NMD isoforms (+271 features, 14 genes promoted to PUI/Entropy analysis).
 
-### 2. Annotation Quality Filter
-- Skips retained introns and NMD transcripts (default; use --include-nmd to retain NMD)
-- Skips transcripts with no CDS annotation
-- Removes zero-UTR singleton groups: transcripts where the polyA site 
-  immediately follows the stop codon (zero 3' UTR length), leaving no 
-  other group for comparison — PUI/Entropy cannot be computed
-- Always preserves the dominant group per gene, even if all other 
-  groups are filtered. Genes with only one remaining group are 
-  retained in the panel as raw count features but excluded from 
-  PUI/Entropy analysis (reported as "no analysis" in panel summary).
-  
-### 3. Zero-Ambiguity Strand-Aware Indexing
-Group 0 always = proximal polyA site, regardless of genomic strand.
-
-### 4. Adaptive Downstream Metrics
-
-| Groups | Method | Description |
-|--------|--------|-------------|
-| 2 | **PUI** | log2(G0+1)/(log2(G0+1)+log2(G1+1)) — directional, interpretable. Log-normalization is essential for high-dynamic-range genes such as immunoglobulins, where raw G0/G1 ratios can span several orders of magnitude at terminal differentiation. |
-| 3+ | **Entropy** | Shannon entropy of polyA site distribution — order-free, robust |
-
-**NMD transcript handling**: By default, NMD (nonsense-mediated decay) transcripts are excluded. Use `--include-nmd` to include AS-NMD isoforms, which adds +271 features and promotes 14 genes from no-analysis to PUI/Entropy. AS-NMD represents a biologically meaningful post-transcriptional regulatory mechanism particularly relevant for RNA-binding proteins and splicing factors.
-
-Panel summary (with `--include-nmd`):
-```
-1 group  (no analysis): 48 genes
-2 groups (PUI):         67 genes
-3+ groups (Entropy):    252 genes
-Total features:         1,808
-```
-
-### 5. ML-Ready Features
-PUI/Entropy features achieve **64% accuracy** (vs 77% for full GEX) in predicting terminal plasma cell commitment using only 40 pure APA features — demonstrating APA captures the majority of cell state information in a 42-fold smaller feature space.
+**ML-ready:** PUI/Entropy features achieve 64% accuracy (vs 77% full GEX) predicting terminal plasma cell commitment using only 40 APA features — capturing the majority of cell state information in a 42-fold smaller feature space.
 
 ---
 
@@ -101,30 +81,40 @@ IsoDecipher recovers membrane (G1) and secreted (G0) isoforms of immunoglobulin 
 ### Figure 2: Quantitative mapping of IgH membrane isoform dynamics
 ![Figure 2](results/figures/G1_piecewise_fit.png)
 
-Piecewise linear modeling identifies two conserved changepoints per isotype: G1 downregulation initiates at CP1 (~0.72–0.77) and completes at CP2 (~0.83–0.86), defining a narrow ~0.09–0.13 pseudotime execution window consistent across all isotypes regardless of class-switch identity — suggesting membrane isoform downregulation is triggered at a shared B cell commitment checkpoint. 
-
-Bimodality analysis at the switching window confirms that G1-high and G1-low cells genuinely coexist at this transition (BC > 0.555 across all isotypes: IGHM: 0.624, IGHG1: 0.564, IGHG3: 0.670, IGHA1: 0.565), consistent with a bistable commitment event rather than a continuous gradient. 
+Piecewise linear modeling identifies conserved changepoints: G1 decline initiates at CP1 (~0.72–0.77) and completes at CP2 (~0.83–0.86), defining a narrow ~0.09–0.13 pseudotime window consistent across all isotypes. Bimodality coefficients exceed the bifurcation threshold at CP1 (BC > 0.555: IGHM 0.624, IGHG1 0.564, IGHG3 0.670, IGHA1 0.565), confirming a bistable commitment event rather than a continuous gradient.
 
 ### Figure 3: TENT5C is co-induced with the IgH secreted isoform at plasma cell commitment
 ![Figure 3](results/figures/TENT5C_G0_horizontal.png)
 
-DEG analysis on IsoDecipher-defined Before/Switching/Terminal stages identifies **TENT5C (top DEG hit)**— a cytoplasmic poly(A) polymerase that stabilizes immunoglobulin heavy chain mRNAs by extending their poly(A) tails — as co-upregulated with the APA switch. By leveraging BCR downregulation as a **high-resolution molecular ruler for cell state**, IsoDecipher captures a critical commitment transition that total gene count pipelines overlook — and critically, enables downstream trajectory analysis that pinpoints which isoform event TENT5C tracks. Cross-correlation of smoothed pseudotime trajectories confirms TENT5C induction is temporally aligned with G0 upregulation at lag=0 across all class-switched isotypes (IGHG1, IGHG3, IGHA1), not with G1 decline — identifying it as the most directly co-regulated gene with the secreted isoform switch rather than a general plasma cell marker.
+DEG analysis on IsoDecipher-defined Before/Switching/Terminal stages identifies **TENT5C (top DEG hit)**— a cytoplasmic poly(A) polymerase that stabilizes immunoglobulin heavy chain mRNAs by extending their poly(A) tails — as co-upregulated with the APA switch. By leveraging BCR downregulation as a **high-resolution molecular ruler for cell state**, IsoDecipher captures a critical commitment transition that total gene count pipelines overlook — and critically, enables downstream trajectory analysis that pinpoints which isoform event TENT5C tracks. Cross-correlation of smoothed pseudotime trajectories confirms TENT5C induction is temporally aligned with G0 upregulation at lag=0 across all class-switched isotypes (IGHG1, IGHG3, IGHA1) — identifying it as the most directly co-regulated gene with the secreted isoform switch rather than a general plasma cell marker.
 
-Notably, TENT5C (FAM46C) is recurrently mutated in multiple myeloma (~13% of cases) — its specific coupling to the secreted isoform switch during normal plasma cell commitment provides a mechanistic rationale for why its loss dysregulates antibody secretion in malignant plasma cells. Beyond myeloma, pathogenic plasma cells in autoimmune diseases such as SLE and rheumatoid arthritis arise from aberrant passage through this same commitment checkpoint; TENT5C's co-induction with the secreted isoform switch identifies it as a candidate target for selectively disrupting autoreactive plasma cell commitment, complementing terminal plasma cell targeting via BCMA/TNFRSF17 — also identified in the IsoDecipher-defined terminal DEG analysis.
+TENT5C (FAM46C) is recurrently mutated in multiple myeloma (~13% of cases); its coupling to the secreted isoform switch provides a mechanistic rationale for why its loss dysregulates antibody secretion. In autoimmune disease, TENT5C's co-induction at the commitment checkpoint identifies it as a candidate target for disrupting autoreactive plasma cell commitment, complementing BCMA/TNFRSF17-directed approaches.
 
 ### Figure 4: Genome-wide APA program restructuring at plasma cell commitment
 
 ![Figure 4](results/figures/UTR_length_waddington_entropy.png)
 
-IsoDecipher reveals coordinated genome-wide APA restructuring coinciding with the IGH commitment checkpoint (CP1). Expression-weighted mean 3' UTR length shortens from 1,273 bp (Before) to 1,099 bp (Terminal, Mann-Whitney U p < 10⁻³⁰⁰), with a transient lengthening peak (~1,350 bp) prior to CP1 driven by activated B cells upregulating distal polyadenylation sites during antigen-driven proliferation and class switch recombination. Waddington landscape analysis reveals that this shortening is not uniform — the 5th percentile changes minimally (917 → 857 bp, Δ = 60 bp) while the 95th percentile collapses from 1,747 to 1,383 bp (Δ = 364 bp), indicating selective elimination of long-UTR isoform states rather than a global leftward shift. Plasma cell commitment does not shorten all UTRs — it eliminates the capacity to maintain long-UTR isoforms. Global APA entropy declines across pseudotime (right panel), reflecting progressive convergence of cells onto fewer dominant polyadenylation sites at terminal commitment — independently corroborating the Waddington landscape finding that plasma cells lose the capacity to maintain isoform diversity.
+Expression-weighted mean 3' UTR length shortens from 1,273 bp to 1,099 bp at CP1 (p < 10⁻³⁰⁰). This is not uniform shortening — the 5th percentile changes minimally (917→857 bp, Δ=60 bp) while the 95th percentile collapses (1,747→1,383 bp, Δ=364 bp), indicating selective elimination of long-UTR states. A transient lengthening peak prior to CP1 reflects activated B cells upregulating distal polyA sites during proliferation and class switch recombination. Waddington landscape and APA entropy analyses independently corroborate progressive isoform repertoire restriction at terminal commitment.
 
 ### Figure 5: CD59 and TMBIM6 undergo progressive APA switching during blast-to-plasma cell maturation
 
 ![Figure 5](results/figures/UTR_gene_validation.png)
 
-Gene-level weighted mean UTR trajectories confirm genuine APA switching for CD59 and TMBIM6, with B2M as a negative control. CD59 (14 isoforms, Δtotal = −699 bp) is broadly expressed across blast/plasmablast and plasma cell clusters (pct 0.47–0.62) but nearly absent in activated B cells (cluster 2, pct=0.083) — its continuous UTR shortening from ~650 bp to ~250 bp reflects genuine isoform switching during blast/plasmablast-to-plasma cell maturation rather than an activated B cell program. TMBIM6 (13 isoforms, Δtotal = −600 bp) shows the most striking signal — a monotonic decline from ~900 bp to ~150 bp spanning the entire pseudotime range. TMBIM6 is virtually absent in activated B cells (cluster 2, pct=0.031), switches on in cluster 3 blast/plasmablasts, and reaches maximum expression in terminal plasma cell clusters — its UTR shortening therefore tracks progressive isoform switching entirely within the blast/plasmablast-to-plasma cell maturation axis. The discrete horizontal bands in the TMBIM6 scatter reflect genuine discrete isoform states rather than noise. B2M (Δtotal = −7 bp), dominantly expressed in activated B cells throughout, shows a flat UTR trajectory confirming the method detects genuine isoform switching rather than expression-level artifacts.
+CD59 (14 isoforms, Δtotal=−699 bp) and TMBIM6 (13 isoforms, Δtotal=−600 bp) show genuine APA switching confirmed by expressing-cell trajectories and leiden cluster composition. Both are absent in activated B cells (pct=0.083 and 0.031) and switch on in blast/plasmablast clusters — their UTR shortening tracks the plasmablast-to-plasma cell axis, not the activated B cell program. B2M (Δtotal=−7 bp) serves as negative control.
+ 
+### Figure 6: CD59 isoform-specific induction at plasma cell commitment
 
-The progressive APA switch of CD59 to its short UTR isoform during plasma cell maturation may reflect an intrinsic survival mechanism rather than a coincidental expression change. Plasma cells secreting high concentrations of immunoglobulin face paradoxical complement activation — antibody accumulating on their own surface triggers the classical complement pathway, potentially directing MAC-mediated lysis against the very cell producing it. Upregulating a more stable, short-UTR CD59 mRNA at the point of peak secretory commitment would increase surface CD59 density precisely when complement pressure is highest. If this interpretation is correct, the CD59 isoform switch is not merely a marker of plasma cell maturation but a functionally necessary adaptation to the secretory program itself. In pathogenic contexts — autoreactive plasma cells in SLE or malignant plasma cells in myeloma — the same mechanism may enable evasion of complement-dependent cytotoxicity by therapeutic antibodies, suggesting that isoform-specific targeting of short-UTR CD59 could restore complement sensitivity at terminal commitment without affecting earlier B cell stages.
+![Figure 6a](results/figures/CD59_TMBIM6_combine.png)
+
+Cellranger GEX shows nearly identical CD59 detection between Switching and Terminal stages (pct=0.612 vs 0.584) — providing no resolution of underlying isoform dynamics. IsoDecipher reveals that CD59 is selectively induced through its most proximal isoform G0 (179bp, CD59-212) from the onset of plasmablast commitment, while the long-UTR isoform G8 (1,262bp) is transiently co-induced during switching but retreats at terminal differentiation.
+For TMBIM6, IsoDecipher resolves a switch from three distinct long-UTR distal isoform groups (G8/G10/G11, 1,813–2,013bp) dominant in the Before stage to a single short-UTR proximal isoform (G4, 55bp) at Switching and Terminal — a transition invisible to Cellranger GEX which shows only a broad increase across stages. This switch consolidates reads from multiple transcripts into biologically meaningful groups, recovering signal that de novo peak callers would fragment across low-confidence peaks.
+Total IsoDecipher detection rates are consistent with Cellranger GEX across all stages (pct difference < 2%), confirming quantification concordance at the gene level while demonstrating isoform-level resolution unavailable to total count analysis.
+
+### Discussion
+
+IsoDecipher's isoform-resolved quantification reveals a coordinated 3' end regulatory program at plasma cell commitment invisible to total GEX analysis. The membrane-to-secreted IgH switch occurs at a conserved checkpoint (CP1 ~0.73) across all isotypes, with IgG showing near-complete G1 silencing while IgM retains residual membrane-form expression — consistent with long-lived IgM plasma cells maintaining low-level surface BCR. Genome-wide, commitment selectively eliminates long-UTR isoform states rather than uniformly shortening UTRs, as confirmed by asymmetric percentile collapse (95th percentile: 1,747→1,383 bp; 5th percentile: 917→857 bp) and monotonic APA entropy decline.
+
+The therapeutic implications are concrete. TENT5C (FAM46C), co-induced with the secreted isoform at lag=0, is recurrently mutated in myeloma (~13% of cases) — its coupling to the APA switch provides a mechanistic rationale for why its loss dysregulates antibody secretion in malignant plasma cells. CD59's shift to its shortest isoform (G0, 179bp) at peak secretion likely reflects complement self-protection; in myeloma and autoreactive plasma cells in SLE, the same mechanism enables evasion of complement-dependent cytotoxicity. Since CD59 isoforms produce identical proteins, isoform-specific ASOs targeting the G0-unique 3' end sequence — or small molecules blocking proximal polyA site selection at CP1 — represent rational therapeutic strategies. More broadly, the CP1 window defines a narrow intervention point (~0.09–0.13 pseudotime units) to selectively eliminate autoreactive plasmablasts before irreversible long-lived plasma cell differentiation is established, while sparing the earlier B cell compartment.
 
 ---
 
@@ -134,6 +124,7 @@ The progressive APA switch of CD59 to its short UTR isoform during plasma cell m
 mamba create -n iso_decipher python=3.10 -y
 mamba activate iso_decipher
 
+pip install -r requirements.txt
 ```
 
 For pipeline orchestration:
@@ -141,12 +132,6 @@ For pipeline orchestration:
 mamba install -c conda-forge -c bioconda snakemake -y
 ```
 
-For scGPT validation:
-```bash
-mamba create -n scgpt_env python=3.10 -y
-pip install torch==2.3.0 torchvision torchaudio
-pip install torchtext==0.18.0 scgpt scanpy anndata
-```
 
 ---
 
@@ -285,8 +270,11 @@ ESR1, PGR, ERBB2, PIK3CA, PTEN, AKT1, CDKN1B, GATA3, MAP3K1, MAP2K4, TBX3, RUNX1
 - **Cancer metabolism**: PKM, LDHA, HIF1A, VEGFA
 - **S100 family**: S100A1-16, S100B, S100P, S100Z
 
-- Housekeeping controls (ACTB, GAPDH, B2M, UBC, PPIB)
-- APA & RNA processing machinery (CSTF1-3, NUDT21, CPSF1-4, SF3B1, U2AF1, RBM10...)
+### APA & RNA Processing 
+CSTF1-3, NUDT21, CPSF1-4, SF3B1, U2AF1, RBM10..
+
+### Housekeeping Controls
+ACTB, GAPDH, B2M, UBC, PPIB, NDUFA4, COX5A
 
 ---
 
