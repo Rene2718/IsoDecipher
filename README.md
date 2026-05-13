@@ -73,35 +73,35 @@ IsoDecipher is the only tool that combines GTF-anchored noise suppression, bioty
 
 ## Key Biological Findings
 
-### Figure 1: IgH isoform dynamics along B cell differentiation
+### 1: IgH isoform dynamics along B cell differentiation
 ![Figure 1](results/figures/IGH_Horizontal_Switch.png)
 IsoDecipher recovers membrane (G1) and secreted (G0) isoforms of immunoglobulin heavy chain transcripts across B cell differentiation for four isotypes (IGHM, IGHG1, IGHG3, IGHA1). The membrane-to-secreted switch arises from APA: G1 utilizes a distal polyadenylation site retaining transmembrane domain exons; G0 uses a proximal site enabling antibody secretion. Cell Ranger total counts increase monotonically across pseudotime for all isotypes, providing no resolution of this transition — IsoDecipher recovers the directionality directly from 3′ BAM files. The G1 decline is a genuine per-cell signal, not a cell-density artifact (minimum n=50 isotype-matched cells per window).
 
-### Figure 2: Quantitative mapping of IgH membrane isoform dynamics
+### 2: Quantitative mapping of IgH membrane isoform dynamics
 ![Figure 2](results/figures/G1_piecewise_fit.png)
 
 Piecewise linear modeling identifies conserved changepoints: G1 decline initiates at CP1 (~0.72–0.77) and completes at CP2 (~0.83–0.86), defining a narrow ~0.09–0.13 pseudotime window consistent across all isotypes. Bimodality coefficients exceed the bifurcation threshold at CP1 (BC > 0.555: IGHM 0.624, IGHG1 0.564, IGHG3 0.670, IGHA1 0.565), confirming a bistable commitment event rather than a continuous gradient.
 
-### Figure 3: TENT5C is co-induced with the IgH secreted isoform at plasma cell commitment
+### 3: TENT5C is co-induced with the IgH secreted isoform at plasma cell commitment
 ![Figure 3](results/figures/TENT5C_G0_horizontal.png)
 
 DEG analysis on IsoDecipher-defined Before/Switching/Terminal stages identifies **TENT5C (top DEG hit)**— a cytoplasmic poly(A) polymerase that stabilizes immunoglobulin heavy chain mRNAs by extending their poly(A) tails — as co-upregulated with the APA switch. By leveraging BCR downregulation as a **high-resolution molecular ruler for cell state**, IsoDecipher captures a critical commitment transition that total gene count pipelines overlook — and critically, enables downstream trajectory analysis that pinpoints which isoform event TENT5C tracks. Cross-correlation of smoothed pseudotime trajectories confirms TENT5C induction is temporally aligned with G0 upregulation at lag=0 across all class-switched isotypes (IGHG1, IGHG3, IGHA1) — identifying it as the most directly co-regulated gene with the secreted isoform switch rather than a general plasma cell marker.
 
 TENT5C (FAM46C) is recurrently mutated in multiple myeloma (~13% of cases); its coupling to the secreted isoform switch provides a mechanistic rationale for why its loss dysregulates antibody secretion. In autoimmune disease, TENT5C's co-induction at the commitment checkpoint identifies it as a candidate target for disrupting autoreactive plasma cell commitment, complementing BCMA/TNFRSF17-directed approaches.
 
-### Figure 4: Genome-wide APA program restructuring at plasma cell commitment
+### 4: Genome-wide APA program restructuring at plasma cell commitment
 
 ![Figure 4](results/figures/UTR_length_waddington_entropy.png)
 
 Expression-weighted mean 3' UTR length shortens from 1,273 bp to 1,099 bp at CP1 (p < 10⁻³⁰⁰). This is not uniform shortening — the 5th percentile changes minimally (917→857 bp, Δ=60 bp) while the 95th percentile collapses (1,747→1,383 bp, Δ=364 bp), indicating selective elimination of long-UTR states. A transient lengthening peak prior to CP1 reflects activated B cells upregulating distal polyA sites during proliferation and class switch recombination. Waddington landscape and APA entropy analyses independently corroborate progressive isoform repertoire restriction at terminal commitment.
 
-### Figure 5: CD59 and TMBIM6 undergo progressive APA switching during blast-to-plasma cell maturation
+### 5: CD59 and TMBIM6 undergo progressive APA switching during blast-to-plasma cell maturation
 
 ![Figure 5](results/figures/UTR_gene_validation.png)
 
 CD59 (14 isoforms, Δtotal=−699 bp) and TMBIM6 (13 isoforms, Δtotal=−600 bp) show genuine APA switching confirmed by expressing-cell trajectories and leiden cluster composition. Both are absent in activated B cells (pct=0.083 and 0.031) and switch on in blast/plasmablast clusters — their UTR shortening tracks the plasmablast-to-plasma cell axis, not the activated B cell program. B2M (Δtotal=−7 bp) serves as negative control.
  
-### Figure 6: CD59 isoform-specific induction at plasma cell commitment
+### 6: Isoform-level resolution reveals CD59 and TMBIM6 switching dynamics invisible to total GEX
 
 ![Figure 6a](results/figures/CD59_TMBIM6_combine.png)
 
