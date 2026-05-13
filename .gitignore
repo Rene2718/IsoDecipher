@@ -1,14 +1,12 @@
 # --- Project Data & Old Versions ---
 data/
 !data/gene_list.txt
-oldversion/
 
-# --- Results (The Trap Fix) ---
+# --- Results ---
 results/*
-# only figure and panel_feature
 !results/figures/
+!results/figures/*
 !results/panel_features.csv
-!results/panel_features_v2.csv
 
 # --- Bioinformatics Large Files ---
 *.bam
@@ -16,8 +14,6 @@ results/*
 *.fastq
 *.fq
 *.gz
-*.csv
-*.tsv
 *.gtf
 *.db
 *.h5ad
@@ -37,11 +33,11 @@ build/
 .venv/
 venv/
 
-# --- Jupyter Notebooks & Checkpoints ---
+# --- Jupyter ---
 .ipynb_checkpoints/
 *.ipynb
 
-# --- OS & IDE Files ---
+# --- OS & IDE ---
 .DS_Store
 .vscode/
 .idea/
