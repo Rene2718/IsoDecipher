@@ -54,18 +54,23 @@ CD59 has 32 annotated transcripts across 14 polyA groups. IsoDecipher consolidat
 | Feature | scAPA | Sierra | MAAPER | IsoDecipher |
 |---------|-------|--------|--------|-------------|
 | Reference | De novo | De novo | GTF | GTF |
-| Feature names | Coordinates | Coordinates | Gene-based | Gene+Group |
+| Output | Peak counts | Peak counts | Site probability | Count matrix |
+| Feature names | Coordinates | Coordinates | Gene+Site | Gene+Group |
 | Noise filter | ❌ | ❌ | Partial | ✅ |
 | Biotype filter | ❌ | ❌ | ❌ | ✅ |
 | NMD option | ❌ | ❌ | ❌ | ✅ |
-| Transcript consolidation | ❌ | ❌ | Partial | ✅ |
+| Transcript consolidation | ❌ | ❌ | ❌ | ✅ |
 | Scanpy ready | ❌ | ❌ | ❌ | ✅ |
 | IG isoform logic | ❌ | ❌ | ❌ | ✅ |
-| Metric selection | Manual | Manual | Manual | Adaptive |
+| Metric selection | Fixed | Fixed | Fixed | Adaptive (PUI/Entropy) |
 
-IsoDecipher is the only tool that combines GTF-anchored noise suppression, biotype-aware filtering, biologically interpretable feature naming (gene+group), and adaptive metric selection into a scanpy-compatible output — enabling isoform-resolved single-cell analysis without post-processing.
+IsoDecipher is the only tool that combines GTF-anchored noise suppression, biotype-aware filtering, and transcript consolidation into a scanpy-compatible count matrix — enabling isoform-resolved single-cell analysis without post-processing.
 
-**Adaptive metrics:** PUI (2 isoform groups) or Shannon entropy (3+ groups) are selected automatically. PUI uses log-normalization essential for high-dynamic-range genes such as immunoglobulins. By default NMD transcripts are excluded; use `--include-nmd` to add AS-NMD isoforms (+271 features, 14 genes promoted to PUI/Entropy analysis).
+**Why transcript consolidation matters:** For genes with multiple transcripts sharing nearby cleavage sites (e.g., CD59 G8 consolidates 7 transcripts within ±10bp), de novo tools fragment reads across low-confidence peaks and MAAPER assigns separate probabilities per site — both approaches dilute signal below detection threshold. IsoDecipher pools these reads into a single group, recovering isoform dynamics that would otherwise be lost.
+
+**IG-aware panel design:** Immunoglobulin heavy chain genes (IGHM, IGHG1-4, IGHA1-2) are annotated with functional labels (G0=Secreted, G1=Membrane) in `panel_features.csv`, enabling direct interpretation of the membrane-to-secreted isoform switch without manual curation. This labeling is automatically applied during panel construction and can be extended to any gene by editing `panel_features.csv` directly. The default gene panel is immunology and oncology focused (391 genes across 22 categories) — users targeting other biological contexts can supply a custom `gene_list.txt` to build a domain-specific panel.
+
+**Adaptive metrics:** PUI (2 isoform groups) or Shannon entropy (3+ groups) are selected automatically per gene. PUI uses log-normalization essential for high-dynamic-range genes such as immunoglobulins. By default NMD transcripts are excluded; use `--include-nmd` to add AS-NMD isoforms (+271 features, 14 genes promoted to PUI/Entropy analysis).
 
 **ML-ready:** PUI/Entropy features achieve 64% accuracy (vs 77% full GEX) predicting terminal plasma cell commitment using only 40 APA features — capturing the majority of cell state information in a 42-fold smaller feature space.
 
@@ -172,6 +177,9 @@ snakemake --cores 4
 snakemake --cores 4 --config include_nmd=True
 ```
 
+### Step 4: Downstream analysis (Python)
+See `notebooks/01_quickstart.ipynb` 
+
 ---
 
 ## Data
@@ -222,7 +230,34 @@ GTF annotation + gene panel (391 genes)
   ├── Isoform-defined DEG staging
   └── TENT5C co-regulation analysis
 ```
+---
 
+## Repository Structure
+
+```
+IsoDecipher/
+├── IsoDecipher/
+│   ├── scripts/
+│   │   ├── build_panel_features.py   # Step 1: Build polyA site panel from GTF
+│   │   ├── assign_reads.py           # Step 2: Assign BAM reads to panel features
+│   │   ├── integrate_samples.py      # Step 3: Merge samples into AnnData
+│   │   └── generate_metadata.py      # Utility: sample metadata generation
+│   └── __init__.py
+├── notebooks/
+│   └── 01_quickstart.ipynb           # PUI/Entropy computation + basic plots
+├── docs/
+│   ├── master_framework.md           # Theoretical framework
+│   ├── resolving_group_ambiguity.md  # Algorithmic design notes
+│   └── UTR_note.md                   # UTR quantification notes
+├── results/
+│   ├── figures/                      # All output figures
+│   └── panel_features.csv            # Pre-built immunology/oncology panel
+├── test/
+│   └── test_isodecipher_panel.py     # Unit tests
+├── Snakefile                         # Full pipeline orchestration
+├── requirements.txt
+└── README.md
+```
 
 ---
 
